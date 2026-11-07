@@ -6,6 +6,7 @@ import { addDays, todayISO } from "./dates.ts";
 import { computeTotals, lineAmountCents, toCents } from "./money.ts";
 import { BILLING_TYPES, type BillingType, type Client, type DisplayStatus, type Invoice, type InvoiceEvent, type InvoiceStatus, type LineItem, type Settings } from "./types.ts";
 import type { InvoiceInput } from "./validation.ts";
+import { setMeta } from "./meta.ts";
 
 const nowISO = () => new Date().toISOString();
 const newId = () => crypto.randomUUID();
@@ -357,28 +358,99 @@ export async function resetAll() {
   ]);
 }
 
+type SeedLine = InvoiceInput["line_items"][number];
+interface SeedInvoice {
+  client: string;
+  email: string | null;
+  lines: SeedLine[];
+  issuedAgo: number;
+  /** Days from today: negative = already due. */
+  dueIn: number;
+  state: "paid" | "sent" | "draft" | "void";
+  paidAgo?: number;
+  via?: "paypal" | "manual";
+  views?: number[];
+  reminders?: { ago: number; tone: string }[];
+  tax?: number;
+  notes?: string;
+  sentence?: string;
+}
+
+const hourly = (description: string, hours: number, rate: number): SeedLine => ({ kind: "hourly", description, quantity: hours, unit_price: rate });
+const days = (description: string, n: number, rate: number): SeedLine => ({ kind: "day_rate", description, quantity: n, unit_price: rate });
+const amount = (kind: "flat_fee" | "milestone" | "deposit" | "retainer", description: string, value: number): SeedLine => ({ kind, description, quantity: 1, unit_price: value });
+
+/** A busy freelance studio's last ~two months: paid, awaiting, overdue, drafts and one void. */
+const SAMPLE: SeedInvoice[] = [
+  // Paid last month
+  { client: "Acme Corp", email: "ap@acme.example", issuedAgo: 52, dueIn: -38, state: "paid", paidAgo: 40, via: "paypal", lines: [amount("flat_fee", "Brand identity package", 2400), hourly("Revisions", 3, 120)], sentence: "Bill Acme Corp $2,400 for the brand identity package plus 3 hours of revisions at $120, net 14", views: [50] },
+  { client: "Lumen Labs", email: "ap@lumenlabs.example", issuedAgo: 45, dueIn: -15, state: "paid", paidAgo: 22, via: "paypal", lines: [amount("milestone", "Website build: phase 1 (design sign-off)", 3400)], views: [44, 30] },
+  { client: "Brightside Bakery", email: "orders@brightside.example", issuedAgo: 33, dueIn: -19, state: "paid", paidAgo: 16, via: "manual", lines: [amount("flat_fee", "Menu redesign", 1250), amount("flat_fee", "Print-ready files", 150)], views: [31] },
+  // Paid this month
+  { client: "Initech", email: "peter@initech.example", issuedAgo: 20, dueIn: -6, state: "paid", paidAgo: 6, via: "paypal", tax: 8, lines: [hourly("UX audit", 12, 110)], sentence: "Invoice Initech 12 hours UX audit at $110, 8% tax, due in 2 weeks", views: [18, 7] },
+  { client: "Northpeak Outdoors", email: "marketing@northpeak.example", issuedAgo: 14, dueIn: 0, state: "paid", paidAgo: 4, via: "paypal", lines: [days("Product photography", 2, 850), amount("flat_fee", "Retouching (40 images)", 400)], views: [9] },
+  { client: "Harbor Yoga", email: "hello@harboryoga.example", issuedAgo: 9, dueIn: 5, state: "paid", paidAgo: 2, via: "paypal", lines: [amount("flat_fee", "Class schedule posters", 480)], sentence: "Charge Harbor Yoga $480 for class schedule posters, due in 2 weeks", views: [3] },
+  { client: "Globex", email: "billing@globex.example", issuedAgo: 7, dueIn: 7, state: "paid", paidAgo: 1, via: "paypal", lines: [amount("retainer", "November design retainer", 1500)], views: [2] },
+  // Awaiting payment
+  { client: "Lumen Labs", email: "ap@lumenlabs.example", issuedAgo: 5, dueIn: 25, state: "sent", lines: [amount("milestone", "Website build: phase 2 (launch)", 1800), hourly("CMS training", 2, 120)], views: [4] },
+  { client: "Acme Corp", email: "ap@acme.example", issuedAgo: 3, dueIn: 11, state: "sent", lines: [amount("deposit", "50% deposit: Q4 campaign", 2000)], notes: "Remaining 50% invoiced on delivery. Thank you!", views: [2, 1] },
+  { client: "Stark Studio", email: "pepper@starkstudio.example", issuedAgo: 2, dueIn: 28, state: "sent", lines: [hourly("Motion graphics", 18, 95)], sentence: "Bill Stark Studio 18 hours of motion graphics at $95/hr, net 30" },
+  { client: "Hooli", email: "gavin@hooli.example", issuedAgo: 1, dueIn: 13, state: "sent", lines: [days("Pitch deck design sprint", 2, 475)] },
+  // Overdue
+  { client: "Globex", email: "billing@globex.example", issuedAgo: 26, dueIn: -12, state: "sent", lines: [amount("milestone", "Landing page build: launch", 1800)], notes: "Thanks for the great project!", views: [24, 10], reminders: [{ ago: 9, tone: "friendly" }, { ago: 2, tone: "firm" }] },
+  { client: "Pied Piper", email: "richard@piedpiper.example", issuedAgo: 21, dueIn: -7, state: "sent", lines: [amount("flat_fee", "Logo refresh", 650)], views: [19], reminders: [{ ago: 3, tone: "friendly" }] },
+  { client: "Wayne Foundation", email: "grants@waynefoundation.example", issuedAgo: 16, dueIn: -2, state: "sent", tax: 8, lines: [hourly("Annual report layout", 22, 105)], views: [12] },
+  // Drafts
+  { client: "Umbrella Health", email: null, issuedAgo: 0, dueIn: 30, state: "draft", lines: [amount("flat_fee", "Brand guidelines", 3200), days("Workshop facilitation", 1, 900)] },
+  { client: "Stark Studio", email: "pepper@starkstudio.example", issuedAgo: 0, dueIn: 24, state: "draft", lines: [amount("retainer", "December design retainer", 1500)] },
+  // Void
+  { client: "Cyberdyne", email: "ops@cyberdyne.example", issuedAgo: 38, dueIn: -8, state: "void", lines: [amount("flat_fee", "Kiosk UI concept (project cancelled)", 900)] },
+];
+
+/** Replaces all invoices and clients with SAMPLE so the dashboard looks lived-in. Settings are kept. */
 export async function seedDemo() {
   const today = todayISO();
-  const ago = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+  const at = (daysAgo: number, hour = 10, seq = 0) => {
+    const d = new Date(Date.now() - daysAgo * 86_400_000);
+    d.setHours(hour, 15, seq, 0);
+    // Never in the future, so invoices created after seeding always sort above the samples.
+    return new Date(Math.min(d.getTime(), Date.now() - 3_600_000 + seq * 1000)).toISOString();
+  };
+  await resetAll();
   const s = await getSettings();
   if (s.business_name === "My Studio") await updateSettings({ business_name: "Northwind Design Studio", business_email: "hello@northwind.design" });
 
-  const paid = await createInvoice(
-    { client_name: "Acme Corp", client_email: "ap@acme.example", line_items: [{ kind: "flat_fee", description: "Brand identity package", quantity: 1, unit_price: 2400 }, { kind: "flat_fee", description: "3 revisions", quantity: 1, unit_price: 360 }], due_date: addDays(today, -10), tax_rate: 0, currency: "USD", notes: null, source_text: "Bill Acme Corp $2400 for brand identity package and 3 revisions at $120, due in 14 days", send: true },
-    { issueDate: addDays(today, -24), createdAt: ago(24) },
-  );
-  await markPaid(paid.id, "manual");
+  // Oldest first so invoice numbers increase with time.
+  const ordered = [...SAMPLE].sort((a, b) => b.issuedAgo - a.issuedAgo);
+  for (const [seq, inv] of ordered.entries()) {
+    const created = await createInvoice(
+      {
+        client_name: inv.client,
+        client_email: inv.email,
+        line_items: inv.lines,
+        due_date: addDays(today, inv.dueIn),
+        tax_rate: inv.tax ?? 0,
+        currency: "USD",
+        notes: inv.notes ?? null,
+        source_text: inv.sentence ?? null,
+        send: inv.state !== "draft",
+      },
+      { issueDate: addDays(today, -inv.issuedAgo), createdAt: at(inv.issuedAgo, 9, seq) },
+    );
+    const statements: { sql: string; args: InValue[] }[] = [];
+    for (const v of inv.views ?? []) statements.push(eventStatement(created.id, "viewed", "Client opened the invoice", at(v, 14)));
+    for (const r of inv.reminders ?? []) statements.push(eventStatement(created.id, "reminder", `Drafted a ${r.tone} reminder`, at(r.ago, 11)));
+    if (inv.state === "paid") {
+      const paidAt = at(inv.paidAgo ?? 0, 16);
+      statements.push({ sql: "UPDATE invoices SET status = 'paid', paid_at = ?, paid_via = ? WHERE id = ?", args: [paidAt, inv.via ?? "manual", created.id] });
+      statements.push(eventStatement(created.id, "paid", inv.via === "paypal" ? `Paid with PayPal by ${inv.client}` : "Marked as paid manually", paidAt));
+    } else if (inv.state === "void") {
+      statements.push({ sql: "UPDATE invoices SET status = 'void' WHERE id = ?", args: [created.id] });
+      statements.push(eventStatement(created.id, "void", "Invoice voided", at(Math.max(inv.issuedAgo - 10, 0), 12)));
+    }
+    if (statements.length) await batch(statements);
+  }
 
-  await createInvoice(
-    { client_name: "Globex", client_email: "billing@globex.example", line_items: [{ kind: "milestone", description: "Landing page build: launch milestone", quantity: 1, unit_price: 1800 }], due_date: addDays(today, -4), tax_rate: 0, currency: "USD", notes: "Thanks for the great project!", source_text: null, send: true },
-    { issueDate: addDays(today, -18), createdAt: ago(18) },
-  );
-  await createInvoice(
-    { client_name: "Initech", client_email: "peter@initech.example", line_items: [{ kind: "hourly", description: "UX audit", quantity: 12, unit_price: 110 }], due_date: addDays(today, 9), tax_rate: 8, currency: "USD", notes: null, source_text: "Invoice Initech 12 hours UX audit at $110, 8% tax", send: true },
-    { issueDate: addDays(today, -5), createdAt: ago(5) },
-  );
-  await createInvoice(
-    { client_name: "Hooli", client_email: null, line_items: [{ kind: "day_rate", description: "Pitch deck design sprint", quantity: 2, unit_price: 475 }], due_date: addDays(today, 14), tax_rate: 0, currency: "USD", notes: null, source_text: null },
-    { createdAt: ago(1) },
-  );
+  // The savings banner counts from when the studio "switched" (about two months ago).
+  await setMeta("switched_at", at(60, 9));
 }
