@@ -79,6 +79,8 @@ See **[WREN.md](WREN.md)** for the two workflows to give Wren.
 
 ### QA with Seldon (Wren)
 
+**How to run it (Mac, Linux, Windows/WSL, GitHub Actions): see [docs/SELDON.md](docs/SELDON.md).** Shortcuts: `npm run qa:validate`, `npm run qa`, `npm run qa:report`.
+
 [`seldon.yml`](seldon.yml) defines the two core workflows as Seldon test cases: "Create an invoice from one sentence" and "Client pays the invoice". The Seldon GitHub App runs them on every PR (against the Vercel preview) and on every deployment (against production).
 
 Seldon runs on deploy when GitHub has a successful Deployment with the live URL. Vercel only posts a commit status, so `.github/workflows/github-deployment.yml` turns Vercel's "production deploy finished" status for `tackle-sub-2ji7` into a GitHub Deployment for https://tackle-sub-2ji7.vercel.app. You can also run it by hand: Actions → Publish GitHub Deployment → Run workflow.

@@ -9,7 +9,13 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "test": "node --test \"tests/unit/*.test.ts\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "seldon": "npx -y @seldonqa/cli@0.14.2",
+    "qa:validate": "npx -y @seldonqa/cli@0.14.2 validate",
+    "qa": "npx -y @seldonqa/cli@0.14.2 run --url https://tackle-sub-2ji7.vercel.app --wait",
+    "qa:logs": "npx -y @seldonqa/cli@0.14.2 logs --follow",
+    "qa:report": "npx -y @seldonqa/cli@0.14.2 report --md --full",
+    "qa:runs": "npx -y @seldonqa/cli@0.14.2 runs"
   },
   "engines": {
     "node": ">=20.9"

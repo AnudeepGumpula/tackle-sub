@@ -72,6 +72,7 @@ jobs:
     env:
       SELDON_API_KEY: ${{ secrets.SELDON_API_KEY }}
       SELDON_NO_UPDATE_CHECK: "1"
+      SELDON_BASE_URL: https://app.seldon.com
       SELDON_CLI: "@seldonqa/cli@0.14.2"
     steps:
       - name: Check for the Seldon API key
