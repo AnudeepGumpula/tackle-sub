@@ -52,14 +52,18 @@ export function InvoiceActions({ invoice, only }: { invoice: Invoice; only: "but
   return (
     <div className="no-print space-y-4">
       {only === "buttons" && (
-      <div className="flex flex-wrap justify-end gap-2">
-        {invoice.status === "draft" && <button className="btn-secondary" onClick={() => setStatus("sent")} disabled={!!busy} data-testid="mark-sent">Mark as sent</button>}
-        {isOpen && <button className="btn-secondary" onClick={() => setStatus("paid")} disabled={!!busy} data-testid="mark-paid">Mark as paid</button>}
-        {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
-        <button className="btn-secondary" onClick={() => window.print()}>Download PDF</button>
-        {invoice.status === "sent" && <button className="btn-ghost" onClick={() => setStatus("void")} disabled={!!busy}>Void</button>}
-        {invoice.status === "void" && <button className="btn-ghost" onClick={() => setStatus("draft")} disabled={!!busy}>Restore as draft</button>}
-        <button className="btn-ghost text-red-600" onClick={remove} disabled={!!busy}>Delete</button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="-ml-4 flex flex-wrap gap-1">
+          {invoice.status === "sent" && <button className="btn-ghost" onClick={() => setStatus("void")} disabled={!!busy}>Void</button>}
+          {invoice.status === "void" && <button className="btn-ghost" onClick={() => setStatus("draft")} disabled={!!busy}>Restore as draft</button>}
+          <button className="btn-ghost text-red-600" onClick={remove} disabled={!!busy}>Delete</button>
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          {invoice.status === "draft" && <button className="btn-secondary" onClick={() => setStatus("sent")} disabled={!!busy} data-testid="mark-sent">Mark as sent</button>}
+          {isOpen && <button className="btn-secondary" onClick={() => setStatus("paid")} disabled={!!busy} data-testid="mark-paid">Mark as paid</button>}
+          {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
+          <button className="btn-secondary" onClick={() => window.print()}>Download PDF</button>
+        </div>
       </div>
 
       )}
