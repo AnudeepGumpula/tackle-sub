@@ -68,6 +68,7 @@ const SCHEMA = [
     invoice_id TEXT NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
     position INTEGER NOT NULL,
     description TEXT NOT NULL,
+    kind TEXT NOT NULL DEFAULT 'flat_fee',
     quantity REAL NOT NULL,
     unit_price_cents INTEGER NOT NULL,
     amount_cents INTEGER NOT NULL
@@ -83,6 +84,16 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS events_invoice_idx ON events (invoice_id)`,
 ];
 
+// Columns added after the first deploy. SQLite has no ADD COLUMN IF NOT EXISTS, so check first.
+async function migrate(client: LibsqlClient): Promise<void> {
+  const cols = await client.execute("PRAGMA table_info(line_items)");
+  if (!cols.rows.some((r) => r.name === "kind")) {
+    await client.execute("ALTER TABLE line_items ADD COLUMN kind TEXT NOT NULL DEFAULT 'flat_fee'");
+    // Existing lines with more than one unit were hours x rate.
+    await client.execute("UPDATE line_items SET kind = 'hourly' WHERE quantity <> 1");
+  }
+}
+
 export async function db(): Promise<LibsqlClient> {
   if (!globalForDb.__db) {
     globalForDb.__db = createClient({
@@ -92,7 +103,7 @@ export async function db(): Promise<LibsqlClient> {
   }
   if (!globalForDb.__dbReady) {
     const client = globalForDb.__db;
-    globalForDb.__dbReady = client.batch(SCHEMA, "write").then(() => undefined).catch((err) => {
+    globalForDb.__dbReady = client.batch(SCHEMA, "write").then(() => migrate(client)).catch((err) => {
       globalForDb.__dbReady = undefined;
       throw err;
     });

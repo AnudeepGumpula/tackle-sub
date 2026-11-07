@@ -2,7 +2,7 @@
 // Used when no ANTHROPIC_API_KEY is configured, or if the Claude call fails,
 // so the core workflow always works (important for live demos and Wren runs).
 
-import type { DraftLineItem, InvoiceDraft } from "./types.ts";
+import type { BillingType, DraftLineItem, FieldFlag, InvoiceDraft } from "./types.ts";
 import { addDays, endOfMonth, isValidISODate, nextWeekday, WEEKDAYS } from "./dates.ts";
 
 export interface ParseContext {
@@ -34,45 +34,71 @@ function cleanDescription(raw: string): string {
   return d.charAt(0).toUpperCase() + d.slice(1);
 }
 
+/** Single-amount lines: spot milestone, deposit and retainer wording; anything else is a flat fee. */
+export function kindFromDescription(description: string): BillingType {
+  if (/\bmilestone\b/i.test(description)) return "milestone";
+  if (/\b(?:deposit|up\s*front|upfront)\b/i.test(description)) return "deposit";
+  if (/\bretainer\b/i.test(description)) return "retainer";
+  return "flat_fee";
+}
+
+function amountLine(description: string, amount: number): DraftLineItem {
+  const d = cleanDescription(description);
+  return { kind: kindFromDescription(d), description: d, quantity: 1, unit_price: amount };
+}
+
 function parseLineItem(segment: string): DraftLineItem | null {
   const s = segment.trim();
   if (!s) return null;
   let m: RegExpMatchArray | null;
 
+  // "3 days on site at $800/day", "2 days of workshops @ 900"
+  m = s.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:day|days)\\b\\s*(?:of\\s+)?(.*?)\\s*(?:at|@|x|for)\\s*${SYM}?\\s*${NUM}(?:\\s*(?:/|per|a)\\s*day)?`, "i"));
+  if (m) {
+    return { kind: "day_rate", description: cleanDescription(m[2] || "Day rate work"), quantity: parseFloat(m[1]), unit_price: toNumber(m[3], m[4]) };
+  }
+
+  // "on-site workshop for 2 days at $900"
+  m = s.match(new RegExp(`(.+?)\\s+(?:for\\s+)?(\\d+(?:\\.\\d+)?)\\s*days?\\b\\s*(?:at|@|x)\\s*${SYM}?\\s*${NUM}`, "i"));
+  if (m) {
+    return { kind: "day_rate", description: cleanDescription(m[1]), quantity: parseFloat(m[2]), unit_price: toNumber(m[3], m[4]) };
+  }
+
   // "10h design at $120", "10 hours of design @ 120/hr", "2.5 hrs consulting x $90"
   m = s.match(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*(?:h|hr|hrs|hour|hours)\\b\\s*(?:of\\s+)?(.*?)\\s*(?:at|@|x|for)\\s*${SYM}?\\s*${NUM}(?:\\s*(?:/|per)\\s*(?:h|hr|hour))?`, "i"));
   if (m) {
-    return { description: cleanDescription(m[2] || "Hourly work"), quantity: parseFloat(m[1]), unit_price: toNumber(m[3], m[4]) };
+    return { kind: "hourly", description: cleanDescription(m[2] || "Hourly work"), quantity: parseFloat(m[1]), unit_price: toNumber(m[3], m[4]) };
   }
 
   // "design for 10 hours at $120"
   m = s.match(new RegExp(`(.+?)\\s+(?:for\\s+)?(\\d+(?:\\.\\d+)?)\\s*(?:h|hr|hrs|hours?)\\b\\s*(?:at|@|x)\\s*${SYM}?\\s*${NUM}`, "i"));
   if (m) {
-    return { description: cleanDescription(m[1]), quantity: parseFloat(m[2]), unit_price: toNumber(m[3], m[4]) };
+    return { kind: "hourly", description: cleanDescription(m[1]), quantity: parseFloat(m[2]), unit_price: toNumber(m[3], m[4]) };
   }
 
-  // "3 logos at $200 each", "3 x banner @ $50"
+  // "3 logos at $200 each", "3 x banner @ $50": freelancers bill this as one flat fee for the batch.
   m = s.match(new RegExp(`^(\\d+)\\s*(?:x\\s*)?(.+?)\\s*(?:at|@)\\s*${SYM}?\\s*${NUM}\\s*(?:each|apiece|ea)?`, "i"));
   if (m) {
-    return { description: cleanDescription(m[2]), quantity: parseInt(m[1], 10), unit_price: toNumber(m[3], m[4]) };
+    const count = parseInt(m[1], 10);
+    return amountLine(`${count} ${m[2].trim()}`, count * toNumber(m[3], m[4]));
   }
 
   // "$500 for logo design", "$1.5k website"
   m = s.match(new RegExp(`${SYM}\\s*${NUM}\\s*(?:for\\s+)?(.*)`, "i"));
   if (m && m[3].trim()) {
-    return { description: cleanDescription(m[3]), quantity: 1, unit_price: toNumber(m[1], m[2]) };
+    return amountLine(m[3], toNumber(m[1], m[2]));
   }
 
   // "logo design for $500", "website: $2,000"
   m = s.match(new RegExp(`(.+?)\\s*(?:for|at|=|:|-)?\\s*${SYM}\\s*${NUM}`, "i"));
   if (m) {
-    return { description: cleanDescription(m[1]), quantity: 1, unit_price: toNumber(m[2], m[3]) };
+    return amountLine(m[1], toNumber(m[2], m[3]));
   }
 
   // "logo design for 500", "website 2000 usd"
   m = s.match(/(.+?)\s+(?:for|at|=|:)?\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?\s*(?:usd|eur|gbp|inr|dollars|bucks)?\s*$/i);
   if (m && /[a-z]/i.test(m[1])) {
-    return { description: cleanDescription(m[1]), quantity: 1, unit_price: toNumber(m[2], m[3]) };
+    return amountLine(m[1], toNumber(m[2], m[3]));
   }
 
   return null;
@@ -107,7 +133,7 @@ function extractDueDate(text: string, ctx: ParseContext): { due: string | null; 
 }
 
 export function parseInvoiceSentence(input: string, ctx: ParseContext): InvoiceDraft {
-  const assumptions: string[] = [];
+  const assumptions: FieldFlag[] = [];
   let text = ` ${input.replace(/\s+/g, " ").trim()} `;
 
   // Email
@@ -140,11 +166,8 @@ export function parseInvoiceSentence(input: string, ctx: ParseContext): InvoiceD
   // Due date
   const dueResult = extractDueDate(text, ctx);
   text = dueResult.rest;
-  let due_date = dueResult.due;
-  if (!due_date) {
-    due_date = addDays(ctx.today, ctx.paymentTermsDays);
-    assumptions.push(`Due in ${ctx.paymentTermsDays} days (your default terms)`);
-  }
+  // Due date is required: if the sentence doesn't say, leave it blank so the review form asks for it.
+  const due_date = dueResult.due ?? "";
 
   // Client name: "Bill Acme ...", "Invoice Jane Doe for ...", "Charge Bob $50 ..."
   let client_name = "";
@@ -167,26 +190,23 @@ export function parseInvoiceSentence(input: string, ctx: ParseContext): InvoiceD
     client_name = known.name;
     if (!client_email && known.email) client_email = known.email;
   }
-  if (!client_name) {
-    client_name = "New client";
-    assumptions.push("Couldn't spot a client name");
-  }
+  // Client name is required: if missing, leave it blank so the review form asks for it.
 
   // Line items
   body = body.replace(/^\s*(?:for|:)\s*/i, " ");
-  const segments = body.split(new RegExp(`\\s*(?:,|;|\\+|\\bplus\\b|\\band\\b(?=\\s*(?:\\d|${SYM}|an?\\s|one\\s)))\\s*`, "i"));
+  const segments = body.split(new RegExp(`\\s*(?:,(?!\\d)|;|\\+|\\bplus\\b|\\band\\b(?=\\s*(?:\\d|${SYM}|an?\\s|one\\s)))\\s*`, "i"));
   const line_items: DraftLineItem[] = [];
   for (const seg of segments) {
     const item = parseLineItem(seg);
     if (item && item.unit_price > 0) line_items.push(item);
   }
   if (line_items.length === 0) {
-    line_items.push({ description: cleanDescription(body) || "Services", quantity: 1, unit_price: 0 });
-    assumptions.push("Couldn't find an amount; please enter one");
+    // Amount is required: leave it at 0 so the review form asks for it.
+    const description = cleanDescription(body) || "Services";
+    line_items.push({ kind: kindFromDescription(description), description, quantity: 1, unit_price: 0 });
   }
 
-  if (tax_rate === ctx.defaultTaxRate && ctx.defaultTaxRate > 0) assumptions.push(`Tax ${ctx.defaultTaxRate}% (your default)`);
-  if (!client_email) assumptions.push("No client email yet");
+  if (!tax && tax_rate === ctx.defaultTaxRate && ctx.defaultTaxRate > 0) assumptions.push({ field: "tax_rate", message: `We used your default tax of ${ctx.defaultTaxRate}%. Check it.` });
 
   return { client_name, client_email, line_items, due_date, tax_rate, currency, notes: null, assumptions, source: "rules" };
 }

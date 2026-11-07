@@ -4,7 +4,7 @@ import type { InValue } from "@libsql/client";
 import { all, batch, get, run } from "./db.ts";
 import { addDays, todayISO } from "./dates.ts";
 import { computeTotals, lineAmountCents, toCents } from "./money.ts";
-import type { Client, DisplayStatus, Invoice, InvoiceEvent, InvoiceStatus, LineItem, Settings } from "./types.ts";
+import { BILLING_TYPES, type BillingType, type Client, type DisplayStatus, type Invoice, type InvoiceEvent, type InvoiceStatus, type LineItem, type Settings } from "./types.ts";
 import type { InvoiceInput } from "./validation.ts";
 
 const nowISO = () => new Date().toISOString();
@@ -130,6 +130,7 @@ async function loadInvoice(where: "id" | "public_id", value: string): Promise<In
   ]);
   const items: LineItem[] = itemRows.map((r) => ({
     id: String(r.id),
+    kind: (BILLING_TYPES as readonly string[]).includes(String(r.kind)) ? (String(r.kind) as BillingType) : "flat_fee",
     description: String(r.description),
     quantity: Number(r.quantity),
     unit_price_cents: Number(r.unit_price_cents),
@@ -192,8 +193,8 @@ function lineItemStatements(invoiceId: string, items: InvoiceInput["line_items"]
   return items.map((item, position) => {
     const unit = toCents(item.unit_price);
     return {
-      sql: "INSERT INTO line_items (id, invoice_id, position, description, quantity, unit_price_cents, amount_cents) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      args: [newId(), invoiceId, position, item.description, item.quantity, unit, lineAmountCents({ quantity: item.quantity, unit_price_cents: unit })] as InValue[],
+      sql: "INSERT INTO line_items (id, invoice_id, position, kind, description, quantity, unit_price_cents, amount_cents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      args: [newId(), invoiceId, position, item.kind, item.description, item.quantity, unit, lineAmountCents({ quantity: item.quantity, unit_price_cents: unit })] as InValue[],
     };
   });
 }
@@ -363,21 +364,21 @@ export async function seedDemo() {
   if (s.business_name === "My Studio") await updateSettings({ business_name: "Northwind Design Studio", business_email: "hello@northwind.design" });
 
   const paid = await createInvoice(
-    { client_name: "Acme Corp", client_email: "ap@acme.example", line_items: [{ description: "Brand identity package", quantity: 1, unit_price: 2400 }, { description: "Revisions", quantity: 3, unit_price: 120 }], due_date: addDays(today, -10), tax_rate: 0, currency: "USD", notes: null, source_text: "Bill Acme Corp $2400 for brand identity package and 3 revisions at $120, due in 14 days", send: true },
+    { client_name: "Acme Corp", client_email: "ap@acme.example", line_items: [{ kind: "flat_fee", description: "Brand identity package", quantity: 1, unit_price: 2400 }, { kind: "flat_fee", description: "3 revisions", quantity: 1, unit_price: 360 }], due_date: addDays(today, -10), tax_rate: 0, currency: "USD", notes: null, source_text: "Bill Acme Corp $2400 for brand identity package and 3 revisions at $120, due in 14 days", send: true },
     { issueDate: addDays(today, -24), createdAt: ago(24) },
   );
   await markPaid(paid.id, "manual");
 
   await createInvoice(
-    { client_name: "Globex", client_email: "billing@globex.example", line_items: [{ description: "Landing page build", quantity: 1, unit_price: 1800 }], due_date: addDays(today, -4), tax_rate: 0, currency: "USD", notes: "Thanks for the great project!", source_text: null, send: true },
+    { client_name: "Globex", client_email: "billing@globex.example", line_items: [{ kind: "milestone", description: "Landing page build: launch milestone", quantity: 1, unit_price: 1800 }], due_date: addDays(today, -4), tax_rate: 0, currency: "USD", notes: "Thanks for the great project!", source_text: null, send: true },
     { issueDate: addDays(today, -18), createdAt: ago(18) },
   );
   await createInvoice(
-    { client_name: "Initech", client_email: "peter@initech.example", line_items: [{ description: "UX audit", quantity: 12, unit_price: 110 }], due_date: addDays(today, 9), tax_rate: 8, currency: "USD", notes: null, source_text: "Invoice Initech 12 hours UX audit at $110, 8% tax", send: true },
+    { client_name: "Initech", client_email: "peter@initech.example", line_items: [{ kind: "hourly", description: "UX audit", quantity: 12, unit_price: 110 }], due_date: addDays(today, 9), tax_rate: 8, currency: "USD", notes: null, source_text: "Invoice Initech 12 hours UX audit at $110, 8% tax", send: true },
     { issueDate: addDays(today, -5), createdAt: ago(5) },
   );
   await createInvoice(
-    { client_name: "Hooli", client_email: null, line_items: [{ description: "Pitch deck design", quantity: 1, unit_price: 950 }], due_date: addDays(today, 14), tax_rate: 0, currency: "USD", notes: null, source_text: null },
+    { client_name: "Hooli", client_email: null, line_items: [{ kind: "day_rate", description: "Pitch deck design sprint", quantity: 2, unit_price: 475 }], due_date: addDays(today, 14), tax_rate: 0, currency: "USD", notes: null, source_text: null },
     { createdAt: ago(1) },
   );
 }

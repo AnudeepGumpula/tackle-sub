@@ -2,10 +2,10 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { addDays, formatDate, isValidISODate, WEEKDAYS } from "./dates.ts";
+import { formatDate, isValidISODate, WEEKDAYS } from "./dates.ts";
 import { CURRENCIES, formatMoney } from "./money.ts";
 import { parseInvoiceSentence, type ParseContext } from "./ruleParser.ts";
-import type { Invoice, InvoiceDraft, Settings } from "./types.ts";
+import { BILLING_TYPES, FLAG_FIELDS, usesRate, type FieldFlag, type Invoice, type InvoiceDraft, type Settings } from "./types.ts";
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
 
@@ -30,28 +30,37 @@ function textOf(content: Anthropic.Beta.BetaContentBlock[]): string {
 // ---------- 1. One sentence -> invoice draft ----------
 
 const DraftSchema = z.object({
-  client_name: z.string().describe("Person or company being billed. Empty string if not mentioned."),
+  client_name: z.string().describe("Person or company being billed. Empty string if not mentioned; never invent one."),
   client_email: z.string().nullable().describe("Client email if mentioned or known, else null."),
   line_items: z.array(
     z.object({
+      kind: z.enum(BILLING_TYPES).describe("How this line is billed: hourly, day_rate, flat_fee, milestone, deposit or retainer."),
       description: z.string().describe("Short, professional line item description, Title case first word."),
-      quantity: z.number().describe("Hours, units, or 1 for a flat fee."),
-      unit_price: z.number().describe("Price per unit in major currency units (e.g. dollars). 0 if unknown."),
+      quantity: z.number().describe("Hours for hourly, days for day_rate, otherwise 1."),
+      unit_price: z.number().describe("Hourly or daily rate for hourly/day_rate; otherwise the line's full amount. Major currency units. 0 if unknown."),
     }),
   ),
   due_date: z.string().nullable().describe("YYYY-MM-DD. null if no due date or terms were mentioned."),
   tax_rate: z.number().nullable().describe("Tax percent, e.g. 8.5. null if not mentioned."),
   currency: z.string().nullable().describe("ISO 4217 code if a currency is implied, else null."),
   notes: z.string().nullable().describe("A note to print on the invoice only if the user asked for one, else null."),
-  assumptions: z.array(z.string()).describe("Short phrases (max 8 words each) for anything you had to guess."),
+  assumptions: z
+    .array(z.object({ field: z.enum(FLAG_FIELDS), message: z.string() }))
+    .describe("Only real guesses, each tied to the field it affects. message is a short note shown under that field, e.g. \"Matched to your client Acme Corp. Check it.\" Don't flag things the sentence stated clearly, or fields left empty."),
 });
 
 const PARSE_SYSTEM = `You turn one casual sentence from a freelancer into a structured invoice draft.
-- Split work into separate line items. "10h design at $120" means quantity 10, unit_price 120.
-- "$1.5k" means 1500. A flat fee is quantity 1.
+- Split work into separate line items and give each a kind:
+  - hourly: "10h design at $120" means quantity 10 (hours), unit_price 120 (rate).
+  - day_rate: "3 days on site at $800/day" means quantity 3 (days), unit_price 800.
+  - flat_fee: "$450 for a logo refresh" means quantity 1, unit_price 450. "3 banners at $80 each" is one flat_fee line "3 banners" for 240.
+  - milestone: payment tied to a project stage, e.g. "$2,000 for the wireframe milestone".
+  - deposit: an up-front payment, e.g. "50% deposit of $3,000".
+  - retainer: a recurring fee for ongoing work, e.g. "$1,500 November retainer".
+- "$1.5k" means 1500.
 - Resolve relative due dates ("Friday", "in 2 weeks", "net 30", "end of month") against today's date given below. A bare weekday means the next one after today.
 - If the client matches a known client, use that exact name and their email.
-- Never invent amounts, emails, or tax. Use null or 0 and list it in assumptions instead.
+- Never invent a client name, amount, rate, due date, email, or tax. Leave them empty, null or 0; the review form asks the user for required ones.
 - Keep descriptions short and invoice-ready (fix typos, no filler words).`;
 
 export async function parseWithClaude(text: string, ctx: ParseContext): Promise<InvoiceDraft> {
@@ -76,22 +85,24 @@ export async function parseWithClaude(text: string, ctx: ParseContext): Promise<
     throw new Error(`Claude could not parse the sentence (stop_reason: ${response.stop_reason})`);
   }
   const out = response.parsed_output;
-  const assumptions = [...out.assumptions];
+  const assumptions: FieldFlag[] = out.assumptions.filter((a) => a.message.trim()).map((a) => ({ field: a.field, message: a.message.trim() }));
 
-  let due_date = out.due_date && isValidISODate(out.due_date) ? out.due_date : null;
-  if (!due_date) {
-    due_date = addDays(ctx.today, ctx.paymentTermsDays);
-    assumptions.push(`Due in ${ctx.paymentTermsDays} days (your default terms)`);
-  }
+  // Due date is required: blank if the sentence didn't give one, so the review form asks for it.
+  const due_date = out.due_date && isValidISODate(out.due_date) ? out.due_date : "";
   const currency = out.currency && (CURRENCIES as readonly string[]).includes(out.currency.toUpperCase()) ? out.currency.toUpperCase() : ctx.currency;
   const line_items = out.line_items
     .filter((i) => i.description.trim())
-    .map((i) => ({ description: i.description.trim(), quantity: i.quantity > 0 ? i.quantity : 1, unit_price: Math.max(0, i.unit_price) }));
+    .map((i) => ({
+      kind: i.kind,
+      description: i.description.trim(),
+      quantity: usesRate(i.kind) && i.quantity > 0 ? i.quantity : 1,
+      unit_price: Math.max(0, i.unit_price),
+    }));
 
   return {
-    client_name: out.client_name.trim() || "New client",
+    client_name: out.client_name.trim(),
     client_email: out.client_email?.trim().toLowerCase() || null,
-    line_items: line_items.length ? line_items : [{ description: "Services", quantity: 1, unit_price: 0 }],
+    line_items: line_items.length ? line_items : [{ kind: "flat_fee", description: "Services", quantity: 1, unit_price: 0 }],
     due_date,
     tax_rate: out.tax_rate ?? ctx.defaultTaxRate,
     currency,
@@ -108,7 +119,7 @@ export async function parseSentence(text: string, ctx: ParseContext): Promise<{ 
       return { draft: await parseWithClaude(text, ctx) };
     } catch (err) {
       console.error("[ai] parse failed, using rule parser:", err instanceof Error ? err.message : err);
-      return { draft: parseInvoiceSentence(text, ctx), warning: "AI was unavailable, so the quick parser filled this in. Double-check it." };
+      return { draft: parseInvoiceSentence(text, ctx), warning: "AI was unavailable, so this was filled in automatically. Double-check it." };
     }
   }
   return { draft: parseInvoiceSentence(text, ctx) };

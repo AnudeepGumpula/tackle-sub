@@ -2,10 +2,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Invoice } from "@/lib/types";
+import { CopyIcon } from "./CopyIcon";
 
 type Tone = "friendly" | "firm" | "final";
 
-export function InvoiceActions({ invoice, payUrl }: { invoice: Invoice; payUrl: string }) {
+/** only="buttons": the toolbar inside the invoice card. only="reminder": the reminder panel in the sidebar. */
+export function InvoiceActions({ invoice, only }: { invoice: Invoice; only: "buttons" | "reminder" }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -31,17 +33,6 @@ export function InvoiceActions({ invoice, payUrl }: { invoice: Invoice; payUrl: 
     router.refresh();
   }
 
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(payUrl);
-    } catch {
-      window.prompt("Copy this link:", payUrl);
-    }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    if (invoice.status === "draft") setStatus("sent");
-  }
-
   async function draftReminder(t: Tone = tone) {
     setBusy("reminder");
     setErr(null);
@@ -60,33 +51,24 @@ export function InvoiceActions({ invoice, payUrl }: { invoice: Invoice; payUrl: 
 
   return (
     <div className="no-print space-y-4">
-      <div className="card space-y-3 p-5">
-        <p className="label">Client pay link</p>
-        <div className="flex gap-2">
-          <input readOnly value={payUrl} className="input font-mono text-xs" aria-label="Client pay link" data-testid="pay-link" onFocus={(e) => e.currentTarget.select()} />
-          <button className="btn-primary shrink-0" onClick={copy} data-testid="copy-link">{copied ? "Copied!" : "Copy"}</button>
+      {only === "buttons" && (
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="-ml-4 flex flex-wrap gap-1">
+          {invoice.status === "sent" && <button className="btn-ghost" onClick={() => setStatus("void")} disabled={!!busy}>Void</button>}
+          {invoice.status === "void" && <button className="btn-ghost" onClick={() => setStatus("draft")} disabled={!!busy}>Restore as draft</button>}
+          <button className="btn-ghost text-red-600" onClick={remove} disabled={!!busy}>Delete</button>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <a className="btn-secondary" href={payUrl} target="_blank" rel="noreferrer" data-testid="open-pay-page">Open client view ↗</a>
-          {invoice.client.email && invoice.status !== "paid" && (
-            <a className="btn-secondary" href={mailto(`Invoice ${invoice.number}`, `Hi ${invoice.client.name},\n\nHere's invoice ${invoice.number}. You can view and pay it here:\n${payUrl}\n\nThank you!`)} onClick={() => invoice.status === "draft" && setStatus("sent")}>
-              Email to client
-            </a>
-          )}
+        <div className="flex flex-wrap justify-end gap-2">
+          {invoice.status === "draft" && <button className="btn-secondary" onClick={() => setStatus("sent")} disabled={!!busy} data-testid="mark-sent">Mark as sent</button>}
+          {isOpen && <button className="btn-secondary" onClick={() => setStatus("paid")} disabled={!!busy} data-testid="mark-paid">Mark as paid</button>}
+          <button className="btn-secondary" onClick={() => window.print()}>Download PDF</button>
+          {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
         </div>
       </div>
 
-      <div className="card flex flex-wrap gap-2 p-5">
-        {invoice.status === "draft" && <button className="btn-secondary" onClick={() => setStatus("sent")} disabled={!!busy} data-testid="mark-sent">Mark as sent</button>}
-        {isOpen && <button className="btn-secondary" onClick={() => setStatus("paid")} disabled={!!busy} data-testid="mark-paid">Mark as paid</button>}
-        {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
-        <button className="btn-secondary" onClick={() => window.print()}>Download PDF</button>
-        {invoice.status === "sent" && <button className="btn-ghost" onClick={() => setStatus("void")} disabled={!!busy}>Void</button>}
-        {invoice.status === "void" && <button className="btn-ghost" onClick={() => setStatus("draft")} disabled={!!busy}>Restore as draft</button>}
-        <button className="btn-ghost text-red-600" onClick={remove} disabled={!!busy}>Delete</button>
-      </div>
+      )}
 
-      {invoice.status === "sent" && (
+      {only === "reminder" && invoice.status === "sent" && (
         <div className="card space-y-3 p-5" data-testid="reminder-panel">
           <div className="flex items-center justify-between">
             <p className="font-semibold">Payment reminder</p>
@@ -107,7 +89,10 @@ export function InvoiceActions({ invoice, payUrl }: { invoice: Invoice; payUrl: 
               <textarea className="input min-h-48 text-sm" value={reminder.body} onChange={(e) => setReminder({ ...reminder, body: e.target.value })} aria-label="Reminder body" />
               <div className="flex gap-2">
                 <a className="btn-primary flex-1" href={mailto(reminder.subject, reminder.body)}>Open in email</a>
-                <button className="btn-secondary" onClick={() => navigator.clipboard.writeText(`${reminder.subject}\n\n${reminder.body}`)}>Copy</button>
+                <button className="btn-secondary gap-2" onClick={async () => { await navigator.clipboard.writeText(`${reminder.subject}\n\n${reminder.body}`); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>
+                  <CopyIcon />
+                  {copied ? "Copied!" : "Copy"}
+                </button>
               </div>
             </div>
           )}
