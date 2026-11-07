@@ -19,7 +19,7 @@ export default async function EditInvoicePage({ params }: { params: Promise<{ id
         initial={{
           client_name: invoice.client.name,
           client_email: invoice.client.email,
-          line_items: invoice.line_items.map((li) => ({ description: li.description, quantity: li.quantity, unit_price: li.unit_price_cents / 100 })),
+          line_items: invoice.line_items.map((li) => ({ kind: li.kind, description: li.description, quantity: li.quantity, unit_price: li.unit_price_cents / 100 })),
           due_date: invoice.due_date,
           tax_rate: invoice.tax_rate,
           currency: invoice.currency,

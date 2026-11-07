@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/dates";
 import { baseUrlFrom } from "@/lib/http";
 import { getInvoice, getSettings } from "@/lib/store";
 import { InvoiceActions } from "@/components/InvoiceActions";
+import { ShareLink } from "@/components/ShareLink";
 import { InvoiceDocument } from "@/components/InvoiceDocument";
 
 export const dynamic = "force-dynamic";
@@ -22,15 +23,11 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
       <div className="no-print flex items-center justify-between">
         <Link href="/" className="text-sm text-slate-500 hover:text-slate-800">← All invoices</Link>
       </div>
-      {created && (
-        <div className="no-print rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200" role="status" data-testid="created-banner">
-          Invoice {invoice.number} created. Copy the pay link below and send it to {invoice.client.name}.
-        </div>
-      )}
+      <ShareLink invoice={invoice} payUrl={payUrl} justCreated={Boolean(created)} />
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <InvoiceDocument invoice={invoice} settings={settings} />
+        <InvoiceDocument invoice={invoice} settings={settings} actions={<InvoiceActions invoice={invoice} only="buttons" />} />
         <aside className="space-y-4">
-          <InvoiceActions invoice={invoice} payUrl={payUrl} />
+          <InvoiceActions invoice={invoice} only="reminder" />
           <div className="card no-print p-5">
             <p className="label mb-3">Activity</p>
             <ol className="space-y-3" data-testid="activity">

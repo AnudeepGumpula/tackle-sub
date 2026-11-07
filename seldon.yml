@@ -1,0 +1,41 @@
+version: 1
+name: oneline
+labels: [hackathon, final]
+run:
+  url: https://tackle-sub-2ji7.vercel.app
+
+testCases:
+  - name: Create an invoice from one sentence
+    id: create-invoice-one-sentence
+    url: /
+    steps:
+      - go to the home page
+      - in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday", accessible label "Describe the invoice in one sentence"), type exactly "Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days"
+      - click the blue "Create" button next to it and wait for the "Review and edit" form to appear (the sentence box shrinks to a "Your sentence" summary above it)
+      - check that the review form shows Client name "Wren Test Co", one line item of type "Hourly" with description "Design", Hours 10, Rate / hr 120, and a Total of $1,200.00
+      - click the "Get pay link" button at the bottom of the form
+      - on the invoice page, note the "Invoice ... created" message at the top with the "Text pay link", "Email invoice" and "Copy link" buttons, the status badge, and the "Amount due"
+      - click "Dashboard" in the top navigation (it is labelled "Home" on narrow screens)
+    criteria: >
+      The invoice page showed an "Invoice ... created" message, status "Awaiting payment",
+      amount due $1,200.00, and an "Open client view" link under the share buttons. The dashboard invoice list
+      then shows a Wren Test Co invoice for $1,200.00 with status "Awaiting payment"
+      (earlier test runs may have left older Wren Test Co rows; the newest one is at the top).
+
+  - name: Client pays the invoice
+    id: client-pays-invoice
+    url: /
+    steps:
+      - go to the home page
+      - in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday"), type exactly "Invoice Pay Flow LLC $450 for logo refresh, due in 14 days"
+      - click the blue "Create" button and wait for the "Review and edit" form to appear
+      - click the "Get pay link" button at the bottom of the form
+      - on the invoice page, click the "Open client view" link under the share buttons at the top (it opens in a new tab; continue in that tab)
+      - check that the client page says "sent you an invoice", is billed to Pay Flow LLC, and shows Amount due $450.00
+      - click the blue "Pay $450.00" button directly above the text "Test mode: no real money moves." (if yellow PayPal buttons are also shown, ignore them)
+      - wait for the green "Paid. Thank you!" confirmation to appear
+      - go back to the home page dashboard
+    criteria: >
+      The client page showed a green "Paid. Thank you!" confirmation and the status badge changed to "Paid".
+      On the dashboard, the newest (top-most) Pay Flow LLC invoice for $450.00 shows status "Paid",
+      and the "Paid this month" total is at least $450.00.

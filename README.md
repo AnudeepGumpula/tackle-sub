@@ -7,12 +7,12 @@ Type (or say) one sentence:
 
 > *"Bill Acme 10 hours of design at $120/hr, due Friday"*
 
-Claude turns it into a complete invoice. You review it and click **Create & get pay link**. Your client opens the link and pays with **PayPal**, and the invoice flips to **Paid** on your dashboard.
+Claude turns it into a complete invoice. You review it and click **Get pay link**. Your client opens the link and pays with **PayPal**, and the invoice flips to **Paid** on your dashboard.
 
 ## Features
 
 - **One-sentence invoicing** with Claude (structured outputs). Handles hours × rate, flat fees, quantities, `$1.5k`, tax, currencies, and due dates like "Friday", "net 30" or "end of month". Matches existing clients and fills in their email. Shows a chip for anything it had to guess.
-- **Voice input** (🎙 Speak it) in Chrome and Edge.
+- **Voice input** (🎙 mic button) in Chrome and Edge.
 - **Works with no API key.** A built-in rule parser takes over automatically, and also covers any Claude failure.
 - **Client pay page** with PayPal Smart Buttons (Orders v2 with server-side capture and amount verification), a print/PDF receipt, and a "viewed" tracker.
 - **Test payment mode** so demos and Wren runs can complete payment without a PayPal login.
@@ -76,6 +76,12 @@ BASE_URL=https://<your-app>.vercel.app npm run test:e2e   # same, against the de
 The first time on a laptop, run `npx playwright install chromium` before the e2e tests.
 
 See **[WREN.md](WREN.md)** for the two workflows to give Wren.
+
+### QA with Seldon (Wren)
+
+[`seldon.yml`](seldon.yml) defines the two core workflows as Seldon test cases: "Create an invoice from one sentence" and "Client pays the invoice". The Seldon GitHub App runs them on every PR (against the Vercel preview) and on every deployment (against production).
+
+They need `ENABLE_TEST_PAYMENTS=true` in **both** the Production and Preview environments on Vercel. Without it the test-mode **Pay** button is hidden and the payment test can't finish.
 
 ## Stack
 

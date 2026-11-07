@@ -34,8 +34,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-8">
       <section>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Invoice in one sentence.</h1>
-        <p className="mt-1 text-slate-500">Type it or say it. Claude fills in the invoice, your client pays with PayPal.</p>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Who are you billing today?</h1>
+        <p className="mt-1 text-slate-500">Describe the work in one sentence. We&apos;ll fill in the rest.</p>
         <div className="mt-5"><MagicCreate aiEnabled={aiEnabled()} /></div>
       </section>
 
