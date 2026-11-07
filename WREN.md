@@ -17,9 +17,9 @@ Make sure `ENABLE_TEST_PAYMENTS=true` is set on the deployed app so Wren can fin
 2. In the box labelled "Describe the invoice in one sentence", type:
    `Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days`
 3. Click **Create**.
-4. **Expect:** a "Review and send" form appears with Client name **Wren Test Co**, one line item of type **Hourly** with description **Design**, Hours **10**, Rate / hr **120**, and Total **$1,200.00**.
+4. **Expect:** a "Review and edit" form appears with Client name **Wren Test Co**, one line item of type **Hourly** with description **Design**, Hours **10**, Rate / hr **120**, and Total **$1,200.00**.
 5. Click **Get pay link**.
-6. **Expect:** the invoice page shows the banner "Invoice INV-… created", status **Awaiting payment**, Amount due **$1,200.00**, and **Text pay link**, **Email invoice** and **Copy link** buttons with an **Open client view ↗** link under them.
+6. **Expect:** the invoice page shows the banner "Invoice INV-… created", status **Awaiting payment**, Amount due **$1,200.00**, and **Text pay link** and **Copy link** buttons with an **Open client view ↗** link under them. (**Email invoice** only appears when the client has an email.)
 7. Click **Dashboard** in the top nav.
 8. **Expect:** a row for **Wren Test Co** with **$1,200.00** and status **Awaiting payment**. The **Outstanding** total includes $1,200.00.
 

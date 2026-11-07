@@ -1,0 +1,6 @@
+Invoice #,Client Name,Client Email,Date Issued,Due Date,Status,Invoice Total,Outstanding,Currency,Description
+0042,Brightside Bakery,orders@brightside.example,2026-10-01,2026-10-31,Paid,"1,250.00",0.00,USD,Menu redesign
+0043,Lumen Labs,ap@lumenlabs.example,2026-10-20,2026-11-19,Sent,"3,400.00","3,400.00",USD,Website build - phase 1
+0044,Harbor Yoga,hello@harboryoga.example,2026-10-05,2026-10-20,Overdue,480.00,480.00,USD,Class schedule posters
+0045,Lumen Labs,ap@lumenlabs.example,2026-11-02,2026-12-02,Partial,"1,800.00",900.00,USD,Website build - phase 2
+0046,Old Client Co,,2026-09-01,2026-09-30,Void,700.00,0.00,USD,Cancelled project

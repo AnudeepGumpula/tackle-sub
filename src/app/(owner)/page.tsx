@@ -2,9 +2,11 @@ import Link from "next/link";
 import { aiEnabled } from "@/lib/ai";
 import { formatDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
+import { getSavings, TOOLS } from "@/lib/savings";
 import { dashboardStats, getSettings, listInvoices } from "@/lib/store";
 import { DemoControls } from "@/components/DemoControls";
 import { MagicCreate } from "@/components/MagicCreate";
+import { SavingsBanner } from "@/components/SavingsBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +21,7 @@ const FILTERS = [
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const { filter = "all" } = await searchParams;
-  const [settings, stats, invoices] = await Promise.all([getSettings(), dashboardStats(), listInvoices()]);
+  const [settings, stats, invoices, savings] = await Promise.all([getSettings(), dashboardStats(), listInvoices(), getSavings()]);
   const cur = settings.currency;
   const shown = invoices.filter((i) => {
     if (filter === "unpaid") return i.display_status === "sent" || i.display_status === "overdue";
@@ -36,6 +38,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <p className="mt-1 text-slate-500">Describe the work in one sentence. We&apos;ll fill in the rest.</p>
         <div className="mt-5"><MagicCreate aiEnabled={aiEnabled()} /></div>
       </section>
+
+      <SavingsBanner savings={savings} tools={TOOLS} currency={cur} />
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Summary">
         <Stat label="Outstanding" value={formatMoney(stats.outstanding_cents, cur)} testId="stat-outstanding" />
@@ -60,8 +64,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         {invoices.length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-5 py-14 text-center">
             <p className="font-medium">No invoices yet</p>
-            <p className="max-w-sm text-sm text-slate-500">Type a sentence above to create your first one, or load sample data to look around.</p>
-            <DemoControls mode="seed" />
+            <p className="max-w-sm text-sm text-slate-500">Type a sentence above to create your first one, import your invoices from FreshBooks, QuickBooks or Wave, or load sample data to look around.</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link href="/import" className="btn-primary">Import from another tool</Link>
+              <DemoControls mode="seed" />
+            </div>
           </div>
         ) : shown.length === 0 ? (
           <p className="px-5 py-10 text-center text-sm text-slate-500">Nothing here.</p>
