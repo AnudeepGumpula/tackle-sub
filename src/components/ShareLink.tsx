@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Invoice } from "@/lib/types";
+import { CopyIcon } from "./CopyIcon";
 
 /** Centered "send it" card at the top of the invoice page: Text pay link, or Email / Copy link. */
 export function ShareLink({ invoice, payUrl, justCreated }: { invoice: Invoice; payUrl: string; justCreated: boolean }) {
@@ -33,10 +34,7 @@ export function ShareLink({ invoice, payUrl, justCreated }: { invoice: Invoice; 
 
   const copyButton = (
     <button type="button" className="btn-secondary w-full justify-center gap-2" onClick={copy} data-testid="copy-link">
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <rect x="9" y="9" width="12" height="12" rx="2" />
-        <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
-      </svg>
+      <CopyIcon />
       {copied ? "Copied!" : "Copy link"}
     </button>
   );

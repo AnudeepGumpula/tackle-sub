@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Invoice } from "@/lib/types";
+import { CopyIcon } from "./CopyIcon";
 
 type Tone = "friendly" | "firm" | "final";
 
@@ -9,6 +10,7 @@ type Tone = "friendly" | "firm" | "final";
 export function InvoiceActions({ invoice, only }: { invoice: Invoice; only: "buttons" | "reminder" }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [reminder, setReminder] = useState<{ subject: string; body: string; source: string } | null>(null);
   const [tone, setTone] = useState<Tone>(invoice.display_status === "overdue" ? "firm" : "friendly");
@@ -83,7 +85,10 @@ export function InvoiceActions({ invoice, only }: { invoice: Invoice; only: "but
               <textarea className="input min-h-48 text-sm" value={reminder.body} onChange={(e) => setReminder({ ...reminder, body: e.target.value })} aria-label="Reminder body" />
               <div className="flex gap-2">
                 <a className="btn-primary flex-1" href={mailto(reminder.subject, reminder.body)}>Open in email</a>
-                <button className="btn-secondary" onClick={() => navigator.clipboard.writeText(`${reminder.subject}\n\n${reminder.body}`)}>Copy</button>
+                <button className="btn-secondary gap-2" onClick={async () => { await navigator.clipboard.writeText(`${reminder.subject}\n\n${reminder.body}`); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>
+                  <CopyIcon />
+                  {copied ? "Copied!" : "Copy"}
+                </button>
               </div>
             </div>
           )}
