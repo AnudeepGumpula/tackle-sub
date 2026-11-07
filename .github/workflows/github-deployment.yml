@@ -21,6 +21,11 @@ on:
         type: boolean
         required: false
         default: true
+      publish:
+        description: "Publish a GitHub Deployment first (turn off to only run Seldon, e.g. from a test branch)"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   deployments: write
@@ -36,7 +41,7 @@ jobs:
     # Only Vercel's successful production deploy of main for the tackle-sub-2ji7 project
     # (status context "Vercel – tackle-sub-2ji7"), or a manual run.
     if: >-
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && inputs.publish) ||
       (github.event.state == 'success' &&
        startsWith(github.event.context, 'Vercel') &&
        endsWith(github.event.context, 'tackle-sub-2ji7') &&
@@ -66,7 +71,12 @@ jobs:
 
   seldon-qa:
     needs: publish
-    if: github.event_name != 'workflow_dispatch' || inputs.run_seldon
+    # Runs after a successful publish, or on a manual run with publishing turned off.
+    if: >-
+      always() &&
+      (needs.publish.result == 'success' ||
+       (github.event_name == 'workflow_dispatch' && !inputs.publish && needs.publish.result == 'skipped')) &&
+      (github.event_name != 'workflow_dispatch' || inputs.run_seldon)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
