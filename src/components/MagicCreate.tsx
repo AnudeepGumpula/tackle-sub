@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { InvoiceDraft } from "@/lib/types";
-import { InvoiceEditor } from "./InvoiceEditor";
+import { InvoiceEditor, type EditorInitial } from "./InvoiceEditor";
 
 const EXAMPLES = [
   "Bill Acme Corp 10 hours of design at $120/hr, due Friday",
@@ -11,13 +11,14 @@ const EXAMPLES = [
 
 type SpeechRec = { start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null; interimResults: boolean; lang: string };
 
-export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boolean; autoFocus?: boolean }) {
+export function MagicCreate({ aiEnabled, autoFocus = false, manualInitial }: { aiEnabled: boolean; autoFocus?: boolean; manualInitial?: EditorInitial }) {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [draft, setDraft] = useState<InvoiceDraft | null>(null);
   const [draftKey, setDraftKey] = useState(0);
+  const [manual, setManual] = useState(false);
   const [listening, setListening] = useState(false);
   const [canListen, setCanListen] = useState(false);
   const recRef = useRef<SpeechRec | null>(null);
@@ -68,8 +69,28 @@ export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boole
     }
   }
 
+  // Step 2 (review): the sentence collapses to a summary so the form gets the focus.
+  const reviewing = Boolean(draft) || manual;
+  function backToSentence() {
+    setDraft(null);
+    setManual(false);
+  }
+
   return (
     <div className="space-y-4">
+      {reviewing && (
+        <div className="card flex items-start justify-between gap-4 px-5 py-4" data-testid="sentence-summary">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-slate-500">{manual ? "Filling it in by hand" : "Your sentence"}</p>
+            {!manual && <p className="mt-0.5 truncate text-slate-900">{text}</p>}
+          </div>
+          <button type="button" className="btn-ghost shrink-0 px-2 text-sm text-brand-700" onClick={backToSentence}>
+            {manual ? "Use a sentence instead" : "Edit sentence"}
+          </button>
+        </div>
+      )}
+
+      {!reviewing && (
       <form
         className="card overflow-hidden"
         onSubmit={(e) => {
@@ -127,8 +148,9 @@ export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boole
           </div>
         </div>
       </form>
+      )}
 
-      {!draft && (
+      {!reviewing && (
         <div className="flex flex-wrap gap-2">
           <span className="self-center text-xs text-slate-500">Try:</span>
           {EXAMPLES.map((ex) => (
@@ -136,6 +158,11 @@ export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boole
               {ex}
             </button>
           ))}
+          {manualInitial && (
+            <button type="button" className="w-full pt-2 text-left text-sm text-brand-700 hover:underline" onClick={() => { setErr(null); setManual(true); }}>
+              Or fill it in by hand
+            </button>
+          )}
         </div>
       )}
 
@@ -145,10 +172,16 @@ export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boole
       {draft && (
         <div data-testid="draft-review">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700">Review and send</h2>
+            <h2 className="text-sm font-semibold text-slate-700">Review and edit</h2>
             <span className="text-xs text-slate-400">{draft.source === "ai" ? "Filled in by Claude" : "Filled in automatically"}</span>
           </div>
-          <InvoiceEditor key={draftKey} initial={{ ...draft, source_text: text }} assumptions={draft.assumptions} showMissing onCancel={() => setDraft(null)} />
+          <InvoiceEditor key={draftKey} initial={{ ...draft, source_text: text }} assumptions={draft.assumptions} showMissing onCancel={backToSentence} />
+        </div>
+      )}
+
+      {manual && !draft && manualInitial && (
+        <div data-testid="manual-entry">
+          <InvoiceEditor initial={manualInitial} onCancel={backToSentence} />
         </div>
       )}
     </div>

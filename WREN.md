@@ -40,6 +40,6 @@ Make sure `ENABLE_TEST_PAYMENTS=true` is set on the deployed app so Wren can fin
 - **Overdue + AI reminder:** Settings → Load sample data → open the **Globex** invoice (Overdue) → choose **Firm** → **Draft reminder email** → expect a subject and an email body that contains the pay link.
 - **Edit an invoice:** open an unpaid invoice → **Edit** → change the hours → **Save changes** → expect the new total.
 - **Required fields:** type `Bill Acme $300 for audit` (no due date) → **Fill in invoice** → expect the Due date field outlined in red with "Required", and **Create invoice** blocked until a date is entered.
-- **Manual entry:** `/invoices/new` → fill in the form by hand → **Create invoice**.
+- **Manual entry:** `/invoices/new` → click **Or fill it in by hand** → fill in the form → **Create invoice**.
 
 Stable selectors exist for automation: `data-testid="magic-input"`, `magic-submit`, `save-and-send`, `invoice-status`, `pay-link`, `test-pay`, `paid-banner`, `invoice-row`.
