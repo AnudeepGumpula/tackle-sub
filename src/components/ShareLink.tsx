@@ -69,7 +69,9 @@ export function ShareLink({ invoice, payUrl, justCreated }: { invoice: Invoice; 
         ) : (
           copyButton
         )}
-        <a className="mt-1 text-sm text-brand-700 hover:underline" href={payUrl} target="_blank" rel="noreferrer" data-testid="open-pay-page">
+        {/* Relative on purpose: always opens on the site this page was loaded from, even behind a
+            proxy or tunnel whose Host header differs from the public address. */}
+        <a className="mt-1 text-sm text-brand-700 hover:underline" href={`/pay/${invoice.public_id}`} target="_blank" rel="noreferrer" data-testid="open-pay-page">
           Open client view ↗
         </a>
       </div>
