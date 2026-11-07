@@ -32,7 +32,7 @@ testCases:
       - click the "Get pay link" button at the bottom of the form
       - on the invoice page, click the "Open client view" link under the share buttons at the top (it opens in a new tab; continue in that tab)
       - check that the client page says "sent you an invoice", is billed to Pay Flow LLC, and shows Amount due $450.00
-      - click the blue "Pay $450.00" button directly above the text "Test mode: no real money moves." (if yellow PayPal buttons are also shown, ignore them)
+      - 'click the blue "Pay $450.00" button directly above the text "Test mode: no real money moves." (if yellow PayPal buttons are also shown, ignore them)'
       - wait for the green "Paid. Thank you!" confirmation to appear
       - go back to the home page dashboard
     criteria: >
