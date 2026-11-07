@@ -1,10 +1,17 @@
 import { formatDate } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
-import type { Invoice, Settings } from "@/lib/types";
+import { BILLING_TYPE_LABELS, usesRate, type Invoice, type LineItem, type Settings } from "@/lib/types";
 import { StatusBadge } from "./StatusBadge";
 
 function qty(n: number) {
   return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, "");
+}
+
+/** "10 hrs × $120.00", "3 days × $800.00", or the billing type for single-amount lines. */
+function detail(li: LineItem, currency: string) {
+  if (!usesRate(li.kind)) return BILLING_TYPE_LABELS[li.kind];
+  const unit = li.kind === "hourly" ? (li.quantity === 1 ? "hr" : "hrs") : li.quantity === 1 ? "day" : "days";
+  return `${qty(li.quantity)} ${unit} × ${formatMoney(li.unit_price_cents, currency)}`;
 }
 
 export function InvoiceDocument({ invoice, settings }: { invoice: Invoice; settings: Settings }) {
@@ -46,17 +53,18 @@ export function InvoiceDocument({ invoice, settings }: { invoice: Invoice; setti
         <thead>
           <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
             <th className="py-2 font-semibold">Description</th>
-            <th className="py-2 text-right font-semibold">Qty</th>
-            <th className="hidden py-2 text-right font-semibold sm:table-cell">Price</th>
+            <th className="hidden py-2 text-right font-semibold sm:table-cell">Detail</th>
             <th className="py-2 text-right font-semibold">Amount</th>
           </tr>
         </thead>
         <tbody>
           {invoice.line_items.map((li) => (
             <tr key={li.id} className="border-b border-slate-100">
-              <td className="py-3 pr-2">{li.description}</td>
-              <td className="py-3 text-right tabular-nums">{qty(li.quantity)}</td>
-              <td className="hidden py-3 text-right tabular-nums sm:table-cell">{formatMoney(li.unit_price_cents, c)}</td>
+              <td className="py-3 pr-2">
+                {li.description}
+                <span className="block text-xs text-slate-500 sm:hidden">{detail(li, c)}</span>
+              </td>
+              <td className="hidden py-3 text-right tabular-nums text-slate-600 sm:table-cell" data-testid="line-detail">{detail(li, c)}</td>
               <td className="py-3 text-right tabular-nums">{formatMoney(li.amount_cents, c)}</td>
             </tr>
           ))}

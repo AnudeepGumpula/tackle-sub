@@ -24,7 +24,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
       </div>
       {created && (
         <div className="no-print rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-200" role="status" data-testid="created-banner">
-          Invoice {invoice.number} created. Copy the pay link below and send it to {invoice.client.name}.
+          Invoice {invoice.number} created. Text or copy the pay link below and send it to {invoice.client.name}.
         </div>
       )}
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">

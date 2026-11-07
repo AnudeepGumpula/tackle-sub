@@ -5,8 +5,8 @@ import { InvoiceEditor } from "./InvoiceEditor";
 
 const EXAMPLES = [
   "Bill Acme Corp 10 hours of design at $120/hr, due Friday",
-  "Invoice Sarah Lee sarah@lee.studio $500 for logo design and 3 social banners at $80 each, net 30",
-  "Charge Globex $2.4k for the website redesign plus 8% tax, due end of month",
+  "Invoice Sarah Lee sarah@lee.studio 3 days of on-site workshops at $800/day, net 30",
+  "Charge Globex $2.4k for the wireframe milestone plus 8% tax, due end of month",
 ];
 
 type SpeechRec = { start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null; interimResults: boolean; lang: string };
@@ -130,9 +130,9 @@ export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boole
         <div data-testid="draft-review">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Review and send</h2>
-            <span className="text-xs text-slate-400">{draft.source === "ai" ? "Filled in by Claude" : "Filled in by quick parser"}</span>
+            <span className="text-xs text-slate-400">{draft.source === "ai" ? "Filled in by Claude" : "Filled in automatically"}</span>
           </div>
-          <InvoiceEditor key={draftKey} initial={{ ...draft, source_text: text }} assumptions={draft.assumptions} onCancel={() => setDraft(null)} />
+          <InvoiceEditor key={draftKey} initial={{ ...draft, source_text: text }} assumptions={draft.assumptions} showMissing onCancel={() => setDraft(null)} />
         </div>
       )}
     </div>

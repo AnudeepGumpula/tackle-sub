@@ -21,7 +21,7 @@ export default async function NewInvoicePage() {
           initial={{
             client_name: "",
             client_email: null,
-            line_items: [{ description: "", quantity: 1, unit_price: 0 }],
+            line_items: [{ kind: "flat_fee", description: "", quantity: 1, unit_price: 0 }],
             due_date: addDays(todayISO(), s.payment_terms_days),
             tax_rate: s.default_tax_rate,
             currency: s.currency,

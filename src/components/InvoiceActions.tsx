@@ -56,23 +56,34 @@ export function InvoiceActions({ invoice, payUrl }: { invoice: Invoice; payUrl: 
   const mailto = (subject: string, body: string) =>
     `mailto:${encodeURIComponent(invoice.client.email ?? "")}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
+  // Opens the phone's Messages app with the pay link filled in (works on iOS and Android).
+  const smsHref = `sms:?&body=${encodeURIComponent(`Hi ${invoice.client.name}, here's invoice ${invoice.number}. You can view and pay it here: ${payUrl}`)}`;
+
   const isOpen = invoice.status === "sent" || invoice.status === "draft";
 
   return (
     <div className="no-print space-y-4">
       <div className="card space-y-3 p-5">
         <p className="label">Client pay link</p>
+        {/* Decision 2: texting the pay link is the main way to send; email and copy link come second. */}
+        {invoice.status !== "paid" && (
+          <div className="flex flex-wrap gap-2">
+            <a className="btn-primary flex-1 justify-center" data-testid="text-invoice" href={smsHref} onClick={() => invoice.status === "draft" && setStatus("sent")}>
+              Text pay link
+            </a>
+            {invoice.client.email && (
+              <a className="btn-secondary flex-1 justify-center" data-testid="email-invoice" href={mailto(`Invoice ${invoice.number}`, `Hi ${invoice.client.name},\n\nHere's invoice ${invoice.number}. You can view and pay it here:\n${payUrl}\n\nThank you!`)} onClick={() => invoice.status === "draft" && setStatus("sent")}>
+                Email invoice
+              </a>
+            )}
+          </div>
+        )}
         <div className="flex gap-2">
           <input readOnly value={payUrl} className="input font-mono text-xs" aria-label="Client pay link" data-testid="pay-link" onFocus={(e) => e.currentTarget.select()} />
-          <button className="btn-primary shrink-0" onClick={copy} data-testid="copy-link">{copied ? "Copied!" : "Copy"}</button>
+          <button className={`${invoice.status !== "paid" ? "btn-secondary" : "btn-primary"} shrink-0`} onClick={copy} data-testid="copy-link">{copied ? "Copied!" : "Copy link"}</button>
         </div>
         <div className="flex flex-wrap gap-2">
           <a className="btn-secondary" href={payUrl} target="_blank" rel="noreferrer" data-testid="open-pay-page">Open client view ↗</a>
-          {invoice.client.email && invoice.status !== "paid" && (
-            <a className="btn-secondary" href={mailto(`Invoice ${invoice.number}`, `Hi ${invoice.client.name},\n\nHere's invoice ${invoice.number}. You can view and pay it here:\n${payUrl}\n\nThank you!`)} onClick={() => invoice.status === "draft" && setStatus("sent")}>
-              Email to client
-            </a>
-          )}
         </div>
       </div>
 
