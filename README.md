@@ -7,12 +7,12 @@ Type (or say) one sentence:
 
 > *"Bill Acme 10 hours of design at $120/hr, due Friday"*
 
-Claude turns it into a complete invoice. You review it and click **Create & get pay link**. Your client opens the link and pays with **PayPal**, and the invoice flips to **Paid** on your dashboard.
+Claude turns it into a complete invoice. You review it and click **Create invoice**. Your client opens the link and pays with **PayPal**, and the invoice flips to **Paid** on your dashboard.
 
 ## Features
 
 - **One-sentence invoicing** with Claude (structured outputs). Handles hours × rate, flat fees, quantities, `$1.5k`, tax, currencies, and due dates like "Friday", "net 30" or "end of month". Matches existing clients and fills in their email. Shows a chip for anything it had to guess.
-- **Voice input** (🎙 Speak it) in Chrome and Edge.
+- **Voice input** (🎙 mic button) in Chrome and Edge.
 - **Works with no API key.** A built-in rule parser takes over automatically, and also covers any Claude failure.
 - **Client pay page** with PayPal Smart Buttons (Orders v2 with server-side capture and amount verification), a print/PDF receipt, and a "viewed" tracker.
 - **Test payment mode** so demos and Wren runs can complete payment without a PayPal login.

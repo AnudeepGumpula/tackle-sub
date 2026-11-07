@@ -99,14 +99,30 @@ export function MagicCreate({ aiEnabled, autoFocus = false }: { aiEnabled: boole
             <span className={`inline-block h-2 w-2 rounded-full ${aiEnabled ? "bg-emerald-500" : "bg-amber-400"}`} />
             {aiEnabled ? "Claude reads your sentence" : "Quick parser (add ANTHROPIC_API_KEY for Claude)"}
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             {canListen && (
-              <button type="button" className={`btn-secondary ${listening ? "border-red-300 text-red-600" : ""}`} onClick={toggleMic} aria-pressed={listening}>
-                {listening ? "● Listening… tap to stop" : "🎙 Speak it"}
+              <button
+                type="button"
+                onClick={toggleMic}
+                aria-pressed={listening}
+                aria-label={listening ? "Stop listening" : "Speak it"}
+                title={listening ? "Listening… tap to stop" : "Speak it"}
+                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md transition focus:outline-none focus:ring-4 ${
+                  listening ? "bg-red-500 ring-4 ring-red-200 hover:bg-red-600 focus:ring-red-200" : "bg-brand-600 hover:bg-brand-700 focus:ring-brand-100"
+                }`}
+                data-testid="mic"
+              >
+                {listening && <span className="absolute inset-0 animate-ping rounded-full bg-red-400 opacity-40" aria-hidden />}
+                <svg viewBox="0 0 24 24" className="relative h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor" />
+                  <path d="M5 11a7 7 0 0 0 14 0" />
+                  <path d="M12 18v3" />
+                  <path d="M8.5 21h7" />
+                </svg>
               </button>
             )}
             <button type="submit" className="btn-primary" disabled={loading} data-testid="magic-submit">
-              {loading ? "Reading…" : "Create invoice"}
+              {loading ? "Reading…" : "Fill in invoice"}
             </button>
           </div>
         </div>

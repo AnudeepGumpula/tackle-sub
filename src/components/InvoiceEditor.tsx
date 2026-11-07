@@ -241,7 +241,7 @@ export function InvoiceEditor({
             {saving === "draft" ? "Saving…" : invoiceId ? "Save changes" : "Save as draft"}
           </button>
           <button type="submit" className="btn-primary" disabled={saving !== null} data-testid="save-and-send">
-            {saving === "send" ? "Saving…" : invoiceId ? "Save & send" : "Create & get pay link"}
+            {saving === "send" ? "Saving…" : invoiceId ? "Save & send" : "Create invoice"}
           </button>
         </div>
       </div>
