@@ -91,8 +91,16 @@ export function InvoiceEditor({
   const show = (bad: boolean) => attempted && bad;
 
   const updateItem = (idx: number, patch: Partial<ItemState>) => setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+  // Switching type keeps the line's total: Hourly 10 x $120 -> Flat fee $1,200 (not $120).
   const changeKind = (idx: number, kind: BillingType) =>
-    updateItem(idx, usesRate(kind) ? { kind } : { kind, quantity: "1" });
+    setItems((prev) =>
+      prev.map((it, i) => {
+        if (i !== idx) return it;
+        if (usesRate(kind)) return { ...it, kind };
+        const total = Math.round(lineQty(it) * num(it.unit_price) * 100) / 100;
+        return { ...it, kind, quantity: "1", unit_price: it.unit_price === "" ? "" : String(total) };
+      }),
+    );
 
   async function save(send: boolean) {
     setErr(null);
