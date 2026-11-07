@@ -83,6 +83,8 @@ See **[WREN.md](WREN.md)** for the two workflows to give Wren.
 
 Seldon runs on deploy when GitHub has a successful Deployment with the live URL. Vercel only posts a commit status, so `.github/workflows/github-deployment.yml` turns Vercel's "production deploy finished" status for `tackle-sub-2ji7` into a GitHub Deployment for https://tackle-sub-2ji7.vercel.app. You can also run it by hand: Actions → Publish GitHub Deployment → Run workflow.
 
+After publishing the Deployment, the same workflow's `seldon-qa` job runs `seldon.yml` with the Seldon CLI against the live site, waits for the verdict, and adds the report to the run's summary page. Runs also appear in Seldon → Experiments. This needs a `SELDON_API_KEY` repository secret (Seldon → Settings → Developer). Without it the job is skipped with a notice. To rerun against the final build: Actions → Publish GitHub Deployment → Run workflow.
+
 When editing `seldon.yml`, keep every step in quotes. An unquoted step containing `: ` (colon + space) is read as a key/value pair and Seldon rejects the file.
 
 They need `ENABLE_TEST_PAYMENTS=true` in **both** the Production and Preview environments on Vercel. Without it the test-mode **Pay** button is hidden and the payment test can't finish.
