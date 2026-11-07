@@ -11,7 +11,6 @@ export default async function NewInvoicePage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <section>
         <h1 className="text-2xl font-bold tracking-tight">New invoice</h1>
-        <p className="mt-1 text-slate-500">Describe it in one sentence. You can check and change everything before it&apos;s created.</p>
         <div className="mt-4">
           <MagicCreate
             aiEnabled={aiEnabled()}
