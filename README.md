@@ -7,7 +7,7 @@ Type (or say) one sentence:
 
 > *"Bill Acme 10 hours of design at $120/hr, due Friday"*
 
-Claude turns it into a complete invoice. You review it and click **Create invoice**. Your client opens the link and pays with **PayPal**, and the invoice flips to **Paid** on your dashboard.
+Claude turns it into a complete invoice. You review it and click **Get pay link**. Your client opens the link and pays with **PayPal**, and the invoice flips to **Paid** on your dashboard.
 
 ## Features
 

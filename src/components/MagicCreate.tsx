@@ -143,7 +143,7 @@ export function MagicCreate({ aiEnabled, autoFocus = false, manualInitial }: { a
               </button>
             )}
             <button type="submit" className="btn-primary" disabled={loading} data-testid="magic-submit">
-              {loading ? "Reading…" : "Fill in invoice"}
+              {loading ? "Reading…" : "Create"}
             </button>
           </div>
         </div>

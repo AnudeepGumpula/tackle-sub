@@ -16,9 +16,9 @@ Make sure `ENABLE_TEST_PAYMENTS=true` is set on the deployed app so Wren can fin
 1. Go to the home page (`/`).
 2. In the box labelled "Describe the invoice in one sentence", type:
    `Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days`
-3. Click **Fill in invoice**.
+3. Click **Create**.
 4. **Expect:** a "Review and send" form appears with Client name **Wren Test Co**, one line item of type **Hourly** with description **Design**, Hours **10**, Rate / hr **120**, and Total **$1,200.00**.
-5. Click **Create invoice**.
+5. Click **Get pay link**.
 6. **Expect:** the invoice page shows the banner "Invoice INV-… created", status **Awaiting payment**, Amount due **$1,200.00**, and **Text pay link**, **Email invoice** and **Copy link** buttons with an **Open client view ↗** link under them.
 7. Click **Dashboard** in the top nav.
 8. **Expect:** a row for **Wren Test Co** with **$1,200.00** and status **Awaiting payment**. The **Outstanding** total includes $1,200.00.
@@ -41,7 +41,7 @@ Make sure `ENABLE_TEST_PAYMENTS=true` is set on the deployed app so Wren can fin
 
 - **Overdue + AI reminder:** Settings → Load sample data → open the **Globex** invoice (Overdue) → choose **Firm** → **Draft reminder email** → expect a subject and an email body that contains the pay link.
 - **Edit an invoice:** open an unpaid invoice → **Edit** → change the hours → **Save changes** → expect the new total.
-- **Required fields:** type `Bill Acme $300 for audit` (no due date) → **Fill in invoice** → expect the Due date field outlined in red with "Required", and **Create invoice** blocked until a date is entered.
-- **Manual entry:** `/invoices/new` → click **Fill in manually** → fill in the form → **Create invoice**.
+- **Required fields:** type `Bill Acme $300 for audit` (no due date) → **Create** → expect the Due date field outlined in red with "Required", and **Get pay link** blocked until a date is entered.
+- **Manual entry:** `/invoices/new` → click **Fill in manually** → fill in the form → **Get pay link**.
 
 Stable selectors exist for automation: `data-testid="magic-input"`, `magic-submit`, `save-and-send`, `invoice-status`, `open-pay-page`, `copy-link`, `text-invoice`, `test-pay`, `paid-banner`, `invoice-row`.

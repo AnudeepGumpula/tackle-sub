@@ -11,9 +11,9 @@ testCases:
     steps:
       - go to the home page
       - in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday", accessible label "Describe the invoice in one sentence"), type exactly "Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days"
-      - click the blue "Fill in invoice" button next to it and wait for the "Review and edit" form to appear (the sentence box shrinks to a "Your sentence" summary above it)
+      - click the blue "Create" button next to it and wait for the "Review and edit" form to appear (the sentence box shrinks to a "Your sentence" summary above it)
       - check that the review form shows Client name "Wren Test Co", one line item of type "Hourly" with description "Design", Hours 10, Rate / hr 120, and a Total of $1,200.00
-      - click the "Create invoice" button at the bottom of the form
+      - click the "Get pay link" button at the bottom of the form
       - on the invoice page, note the "Invoice ... created" message at the top with the "Text pay link", "Email invoice" and "Copy link" buttons, the status badge, and the "Amount due"
       - click "Dashboard" in the top navigation (it is labelled "Home" on narrow screens)
     criteria: >
@@ -28,8 +28,8 @@ testCases:
     steps:
       - go to the home page
       - in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday"), type exactly "Invoice Pay Flow LLC $450 for logo refresh, due in 14 days"
-      - click the blue "Fill in invoice" button and wait for the "Review and edit" form to appear
-      - click the "Create invoice" button at the bottom of the form
+      - click the blue "Create" button and wait for the "Review and edit" form to appear
+      - click the "Get pay link" button at the bottom of the form
       - on the invoice page, click the "Open client view" link under the share buttons at the top (it opens in a new tab; continue in that tab)
       - check that the client page says "sent you an invoice", is billed to Pay Flow LLC, and shows Amount due $450.00
       - click the blue "Pay $450.00" button directly above the text "Test mode: no real money moves." (if yellow PayPal buttons are also shown, ignore them)
