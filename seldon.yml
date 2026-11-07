@@ -39,3 +39,34 @@ testCases:
       The client page showed a green "Paid. Thank you!" confirmation and the status badge changed to "Paid".
       On the dashboard, the newest (top-most) Pay Flow LLC invoice for $450.00 shows status "Paid",
       and the "Paid this month" total is at least $450.00.
+
+  - name: 'Switch from FreshBooks with a CSV import'
+    id: import-from-freshbooks
+    url: /
+    steps:
+      - 'go to the home page'
+      - 'in the green savings banner, click the white "Import from FreshBooks" button (it may say "Import from another tool")'
+      - 'on the "Switch in 60 seconds" page, click the "Try a sample FreshBooks export" button'
+      - 'wait for the preview to appear and check that it says "4 invoices for 4 clients", lists Lumen Labs, Harbor Yoga and Brightside Bakery, and says it is skipping 1 row'
+      - 'click the blue "Import 4 invoices" button'
+      - 'wait for the "You''re switched over" confirmation, then click "See unpaid invoices"'
+    criteria: >
+      The preview showed 4 invoices for 4 clients with 1 row skipped. After importing, a "You're switched over"
+      confirmation appeared (on a repeat run it may instead say the invoices were already imported earlier).
+      The unpaid invoice list then includes a Harbor Yoga invoice numbered 0044 for $480.00 with status "Overdue".
+
+  - name: 'Overdue invoice gets an AI payment reminder'
+    id: overdue-ai-reminder
+    url: /
+    steps:
+      - 'go to the home page'
+      - 'in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday"), type exactly "Bill Late Payer Inc $300 for consulting, due 2026-11-01"'
+      - 'click the blue "Create" button and wait for the "Review and edit" form to appear'
+      - 'click the "Get pay link" button at the bottom of the form'
+      - 'on the invoice page, check that the status badge says "Overdue"'
+      - 'in the "Payment reminder" panel on the right, click the "Firm" tone'
+      - 'click the "Draft reminder email" button and wait up to 30 seconds for the reminder to appear'
+    criteria: >
+      The invoice for Late Payer Inc showed status "Overdue" and amount due $300.00. After clicking
+      "Draft reminder email", a reminder appeared with a non-empty subject line and an email body that mentions
+      the invoice amount $300.00 and contains a payment link with "/pay/" in it.
