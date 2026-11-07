@@ -1,0 +1,40 @@
+version: 1
+name: oneline
+labels: [hackathon, final]
+run:
+  url: https://tackle-sub-2ji7.vercel.app
+
+testCases:
+  - name: Create an invoice from one sentence
+    id: create-invoice-one-sentence
+    url: /
+    steps:
+      - go to the home page
+      - in the box labelled "Describe the invoice in one sentence", type exactly "Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days"
+      - click the "Create invoice" button and wait for the review form to appear
+      - check that the review form shows client name Wren Test Co, a line item for design with quantity 10 and price 120, and a total of $1,200.00
+      - click the "Create & get pay link" button
+      - on the invoice page, note the status, the amount due and the "Client pay link" field
+      - click "Dashboard" in the top navigation
+    criteria: >
+      The invoice page showed a "created" banner, status "Awaiting payment", amount due $1,200.00,
+      and a client pay link containing "/pay/". The dashboard then lists a Wren Test Co invoice
+      for $1,200.00 with status "Awaiting payment".
+
+  - name: Client pays the invoice
+    id: client-pays-invoice
+    url: /
+    steps:
+      - go to the home page
+      - in the box labelled "Describe the invoice in one sentence", type exactly "Invoice Pay Flow LLC $450 for logo refresh"
+      - click the "Create invoice" button and wait for the review form to appear
+      - click the "Create & get pay link" button
+      - on the invoice page, click "Open client view" (it may open in a new tab; if so, continue in that tab)
+      - check that the client page shows the invoice is billed to Pay Flow LLC with amount due $450.00
+      - do NOT use the yellow PayPal buttons; instead click the "Pay $450.00" button just above the text "Test mode, no real money moves"
+      - wait for the payment confirmation
+      - go back to the home page dashboard
+    criteria: >
+      The client page showed a green "Paid. Thank you!" confirmation with status Paid.
+      On the dashboard, the Pay Flow LLC invoice for $450.00 shows status "Paid",
+      and the "Paid this month" total includes $450.00.
