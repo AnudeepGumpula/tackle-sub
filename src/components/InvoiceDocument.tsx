@@ -14,10 +14,11 @@ function detail(li: LineItem, currency: string) {
   return `${qty(li.quantity)} ${unit} × ${formatMoney(li.unit_price_cents, currency)}`;
 }
 
-export function InvoiceDocument({ invoice, settings }: { invoice: Invoice; settings: Settings }) {
+export function InvoiceDocument({ invoice, settings, actions }: { invoice: Invoice; settings: Settings; actions?: React.ReactNode }) {
   const c = invoice.currency;
   return (
     <article className="card p-6 sm:p-10" data-testid="invoice-document">
+      {actions && <div className="no-print -mt-2 mb-8 border-b border-slate-100 pb-4 sm:-mt-4">{actions}</div>}
       <header className="flex flex-col gap-6 sm:flex-row sm:justify-between">
         <div>
           <p className="text-lg font-bold">{settings.business_name}</p>

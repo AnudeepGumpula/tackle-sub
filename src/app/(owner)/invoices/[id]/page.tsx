@@ -25,9 +25,9 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
       </div>
       <ShareLink invoice={invoice} payUrl={payUrl} justCreated={Boolean(created)} />
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <InvoiceDocument invoice={invoice} settings={settings} />
+        <InvoiceDocument invoice={invoice} settings={settings} actions={<InvoiceActions invoice={invoice} only="buttons" />} />
         <aside className="space-y-4">
-          <InvoiceActions invoice={invoice} />
+          <InvoiceActions invoice={invoice} only="reminder" />
           <div className="card no-print p-5">
             <p className="label mb-3">Activity</p>
             <ol className="space-y-3" data-testid="activity">

@@ -5,7 +5,8 @@ import type { Invoice } from "@/lib/types";
 
 type Tone = "friendly" | "firm" | "final";
 
-export function InvoiceActions({ invoice }: { invoice: Invoice }) {
+/** only="buttons": the toolbar inside the invoice card. only="reminder": the reminder panel in the sidebar. */
+export function InvoiceActions({ invoice, only }: { invoice: Invoice; only: "buttons" | "reminder" }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -48,7 +49,8 @@ export function InvoiceActions({ invoice }: { invoice: Invoice }) {
 
   return (
     <div className="no-print space-y-4">
-      <div className="card flex flex-wrap gap-2 p-5">
+      {only === "buttons" && (
+      <div className="flex flex-wrap justify-end gap-2">
         {invoice.status === "draft" && <button className="btn-secondary" onClick={() => setStatus("sent")} disabled={!!busy} data-testid="mark-sent">Mark as sent</button>}
         {isOpen && <button className="btn-secondary" onClick={() => setStatus("paid")} disabled={!!busy} data-testid="mark-paid">Mark as paid</button>}
         {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
@@ -58,7 +60,9 @@ export function InvoiceActions({ invoice }: { invoice: Invoice }) {
         <button className="btn-ghost text-red-600" onClick={remove} disabled={!!busy}>Delete</button>
       </div>
 
-      {invoice.status === "sent" && (
+      )}
+
+      {only === "reminder" && invoice.status === "sent" && (
         <div className="card space-y-3 p-5" data-testid="reminder-panel">
           <div className="flex items-center justify-between">
             <p className="font-semibold">Payment reminder</p>
