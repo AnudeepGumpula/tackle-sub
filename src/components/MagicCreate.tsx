@@ -85,7 +85,7 @@ export function MagicCreate({ aiEnabled, autoFocus = false, manualInitial }: { a
             {!manual && <p className="mt-0.5 truncate text-slate-900">{text}</p>}
           </div>
           <button type="button" className="btn-ghost shrink-0 px-2 text-sm text-brand-700" onClick={backToSentence}>
-            {manual ? "Use a sentence instead" : "Edit sentence"}
+            {manual ? "Use a sentence instead" : "Edit"}
           </button>
         </div>
       )}
@@ -160,7 +160,7 @@ export function MagicCreate({ aiEnabled, autoFocus = false, manualInitial }: { a
           ))}
           {manualInitial && (
             <button type="button" className="w-full pt-2 text-left text-sm text-brand-700 hover:underline" onClick={() => { setErr(null); setManual(true); }}>
-              Or fill it in by hand
+              Fill in manually
             </button>
           )}
         </div>
@@ -173,7 +173,6 @@ export function MagicCreate({ aiEnabled, autoFocus = false, manualInitial }: { a
         <div data-testid="draft-review">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">Review and edit</h2>
-            <span className="text-xs text-slate-400">{draft.source === "ai" ? "Filled in by Claude" : "Filled in automatically"}</span>
           </div>
           <InvoiceEditor key={draftKey} initial={{ ...draft, source_text: text }} assumptions={draft.assumptions} showMissing onCancel={backToSentence} />
         </div>

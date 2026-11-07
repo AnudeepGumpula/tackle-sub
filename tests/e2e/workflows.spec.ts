@@ -18,7 +18,7 @@ test("workflow 1: create an invoice from one sentence", async ({ page }) => {
   await expect(page.getByTestId("created-banner")).toBeVisible();
   await expect(page.getByTestId("invoice-status").first()).toHaveText("Awaiting payment");
   await expect(page.getByTestId("invoice-total")).toHaveText("$1,200.00");
-  await expect(page.getByTestId("pay-link")).toHaveValue(/\/pay\/[\w-]+$/);
+  await expect(page.getByTestId("open-pay-page")).toHaveAttribute("href", /\/pay\/[\w-]+$/);
 
   await page.goto("/");
   const row = page.getByTestId("invoice-row").filter({ hasText: "Wren Test Co" }).first();
@@ -31,8 +31,8 @@ test("workflow 2: client pays the invoice from the pay link", async ({ page }) =
   await page.getByTestId("magic-input").fill("Invoice Pay Flow LLC $450 for logo refresh, due in 14 days");
   await page.getByTestId("magic-submit").click();
   await page.getByTestId("save-and-send").click();
-  await expect(page.getByTestId("pay-link")).toBeVisible();
-  const payUrl = await page.getByTestId("pay-link").inputValue();
+  await expect(page.getByTestId("open-pay-page")).toBeVisible();
+  const payUrl = (await page.getByTestId("open-pay-page").getAttribute("href"))!;
   const invoiceUrl = page.url().split("?")[0];
 
   await page.goto(payUrl);
