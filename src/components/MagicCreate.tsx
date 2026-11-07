@@ -128,7 +128,7 @@ export function MagicCreate({ aiEnabled, autoFocus = false, manualInitial }: { a
                 aria-pressed={listening}
                 aria-label={listening ? "Stop listening" : "Speak it"}
                 title={listening ? "Listening… tap to stop" : "Speak it"}
-                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md transition focus:outline-none focus:ring-4 ${
+                className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition focus:outline-none focus:ring-4 ${
                   listening ? "bg-red-500 ring-4 ring-red-200 hover:bg-red-600 focus:ring-red-200" : "bg-brand-600 hover:bg-brand-700 focus:ring-brand-100"
                 }`}
                 data-testid="mic"

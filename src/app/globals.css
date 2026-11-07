@@ -14,7 +14,7 @@ html { background: #f6f7fb; color: var(--color-ink); }
 body { min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
 @utility card {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  @apply rounded-2xl border border-slate-200 bg-white;
 }
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
