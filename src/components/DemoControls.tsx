@@ -2,11 +2,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function DemoControls({ mode }: { mode: "seed" | "reset" }) {
+export function DemoControls({ mode, confirmReplace = false }: { mode: "seed" | "reset"; confirmReplace?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   async function go() {
     if (mode === "reset" && !confirm("Delete all invoices and clients? Settings are kept.")) return;
+    if (mode === "seed" && confirmReplace && !confirm("Replace all invoices and clients with sample data? Settings are kept.")) return;
     setBusy(true);
     await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: mode }) });
     setBusy(false);

@@ -39,9 +39,9 @@ export default async function SettingsPage() {
       <section className="card flex flex-wrap items-center justify-between gap-4 p-6">
         <div>
           <h2 className="font-semibold">Demo data</h2>
-          <p className="text-sm text-slate-500">Load sample invoices, or wipe everything before a fresh test run.</p>
+          <p className="text-sm text-slate-500">Load a full set of sample invoices (replaces current ones), or wipe everything before a fresh test run.</p>
         </div>
-        <div className="flex gap-2"><DemoControls mode="seed" /><DemoControls mode="reset" /></div>
+        <div className="flex gap-2"><DemoControls mode="seed" confirmReplace /><DemoControls mode="reset" /></div>
       </section>
     </div>
   );
