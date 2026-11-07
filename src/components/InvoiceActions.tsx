@@ -61,8 +61,8 @@ export function InvoiceActions({ invoice, only }: { invoice: Invoice; only: "but
         <div className="flex flex-wrap justify-end gap-2">
           {invoice.status === "draft" && <button className="btn-secondary" onClick={() => setStatus("sent")} disabled={!!busy} data-testid="mark-sent">Mark as sent</button>}
           {isOpen && <button className="btn-secondary" onClick={() => setStatus("paid")} disabled={!!busy} data-testid="mark-paid">Mark as paid</button>}
-          {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
           <button className="btn-secondary" onClick={() => window.print()}>Download PDF</button>
+          {invoice.status !== "paid" && <a className="btn-secondary" href={`/invoices/${invoice.id}/edit`}>Edit</a>}
         </div>
       </div>
 
