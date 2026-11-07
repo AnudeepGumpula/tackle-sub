@@ -18,6 +18,9 @@ Claude turns it into a complete invoice. You review it and click **Create & get 
 - **Test payment mode** so demos and Wren runs can complete payment without a PayPal login.
 - **Dashboard** with outstanding, overdue and paid-this-month totals, filters, and auto-detected overdue invoices.
 - **AI payment reminders** in friendly, firm or final tones. Claude writes them using the invoice's history (how often it was viewed, earlier reminders).
+- **Switch in 60 seconds** (`/import`): upload a CSV export from FreshBooks, QuickBooks or Wave (invoices or a client list). OneLine detects the columns and shows a preview. Then it imports clients and invoices: unpaid ones become payable with pay links, paid ones arrive with their past paid date, original invoice numbers are kept, voids are skipped, and re-importing the same file never duplicates. A sample export is included to try it.
+- **Savings counter** on the dashboard: "You've saved $X vs FreshBooks", counted per month since you switched. The tool and monthly price are editable.
+- **Venmo and Pay Later** buttons appear next to PayPal for eligible US buyers, plus PayPal's Pay Later message.
 - Invoice editing, mark sent/paid, void, delete, an activity timeline, clients with totals, business settings, and sample data.
 
 ## Quick start (laptop)

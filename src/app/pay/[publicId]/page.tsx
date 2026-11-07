@@ -43,7 +43,7 @@ export default async function PayPage({ params }: { params: Promise<{ publicId: 
         <InvoiceDocument invoice={invoice} settings={settings} />
         <aside className="no-print order-first space-y-4 lg:order-none">
           {invoice.status !== "paid" && invoice.status !== "void" ? (
-            <PayPanel publicId={invoice.public_id} currency={invoice.currency} amountLabel={amount} paypalClientId={paypalClientId()} testPayments={testPaymentsEnabled()} />
+            <PayPanel publicId={invoice.public_id} currency={invoice.currency} amount={invoice.total_cents / 100} amountLabel={amount} paypalClientId={paypalClientId()} paypalSandbox={process.env.PAYPAL_ENV !== "live"} testPayments={testPaymentsEnabled()} />
           ) : null}
           <PrintButton label={invoice.status === "paid" ? "Download receipt" : "Download PDF"} />
         </aside>
