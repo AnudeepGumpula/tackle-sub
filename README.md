@@ -74,6 +74,12 @@ The first time on a laptop, run `npx playwright install chromium` before the e2e
 
 See **[WREN.md](WREN.md)** for the two workflows to give Wren.
 
+### QA with Seldon (Wren)
+
+[`seldon.yml`](seldon.yml) defines the two core workflows as Seldon test cases: "Create an invoice from one sentence" and "Client pays the invoice". The Seldon GitHub App runs them on every PR (against the Vercel preview) and on every deployment (against production).
+
+They need `ENABLE_TEST_PAYMENTS=true` in **both** the Production and Preview environments on Vercel. Without it the test-mode **Pay** button is hidden and the payment test can't finish.
+
 ## Stack
 
 Next.js 15 (App Router) · React 19 · Tailwind CSS 4 · libSQL/SQLite (Turso-ready) · Anthropic SDK (`claude-opus-5-5`, structured outputs, low effort) · PayPal Orders v2 · Zod

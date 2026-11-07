@@ -2,6 +2,8 @@
 
 Prize rule: *Wren results for at least two core workflows, rerun against your final build.*
 
+These two workflows are automated in [`seldon.yml`](seldon.yml). The Seldon GitHub App runs them on every PR (against the Vercel preview) and on every deployment (against the deployed URL).
+
 **Before each run:** open `/settings` → **Delete all invoices & clients** (optional: **Load sample data**).
 Make sure `ENABLE_TEST_PAYMENTS=true` is set on the deployed app so Wren can finish the payment without a PayPal login.
 

@@ -10,31 +10,32 @@ testCases:
     url: /
     steps:
       - go to the home page
-      - in the box labelled "Describe the invoice in one sentence", type exactly "Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days"
-      - click the "Fill in invoice" button and wait for the review form to appear
-      - check that the review form shows client name Wren Test Co, one line item of type Hourly with description Design, Hours 10, Rate / hr 120, and a total of $1,200.00
-      - click the "Create invoice" button
-      - on the invoice page, note the status, the amount due and the "Client pay link" field
-      - click "Dashboard" in the top navigation
+      - in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday", accessible label "Describe the invoice in one sentence"), type exactly "Bill Wren Test Co 10 hours of design at $120/hr, due in 14 days"
+      - click the blue "Fill in invoice" button next to it and wait for the "Review and edit" form to appear (the sentence box shrinks to a "Your sentence" summary above it)
+      - check that the review form shows Client name "Wren Test Co", one line item of type "Hourly" with description "Design", Hours 10, Rate / hr 120, and a Total of $1,200.00
+      - click the "Create invoice" button at the bottom of the form
+      - on the invoice page, note the green "Invoice ... created" banner, the status badge, the "Amount due" and the "Client pay link" field
+      - click "Dashboard" in the top navigation (it is labelled "Home" on narrow screens)
     criteria: >
-      The invoice page showed a "created" banner, status "Awaiting payment", amount due $1,200.00,
-      and a client pay link containing "/pay/". The dashboard then lists a Wren Test Co invoice
-      for $1,200.00 with status "Awaiting payment".
+      The invoice page showed a green "Invoice ... created" banner, status "Awaiting payment",
+      amount due $1,200.00, and a client pay link containing "/pay/". The dashboard invoice list
+      then shows a Wren Test Co invoice for $1,200.00 with status "Awaiting payment"
+      (earlier test runs may have left older Wren Test Co rows; the newest one is at the top).
 
   - name: Client pays the invoice
     id: client-pays-invoice
     url: /
     steps:
       - go to the home page
-      - in the box labelled "Describe the invoice in one sentence", type exactly "Invoice Pay Flow LLC $450 for logo refresh, due in 14 days"
-      - click the "Fill in invoice" button and wait for the review form to appear
-      - click the "Create invoice" button
-      - on the invoice page, click "Open client view" (it may open in a new tab; if so, continue in that tab)
-      - check that the client page shows the invoice is billed to Pay Flow LLC with amount due $450.00
-      - do NOT use the yellow PayPal buttons; instead click the "Pay $450.00" button just above the text "Test mode, no real money moves"
-      - wait for the payment confirmation
+      - in the large text box at the top of the page (placeholder "e.g. Bill Acme 10 hours of design at $120/hr, due Friday"), type exactly "Invoice Pay Flow LLC $450 for logo refresh, due in 14 days"
+      - click the blue "Fill in invoice" button and wait for the "Review and edit" form to appear
+      - click the "Create invoice" button at the bottom of the form
+      - on the invoice page, click "Open client view" (it opens in a new tab; continue in that tab)
+      - check that the client page says "sent you an invoice", is billed to Pay Flow LLC, and shows Amount due $450.00
+      - click the blue "Pay $450.00" button directly above the text "Test mode: no real money moves." (if yellow PayPal buttons are also shown, ignore them)
+      - wait for the green "Paid. Thank you!" confirmation to appear
       - go back to the home page dashboard
     criteria: >
-      The client page showed a green "Paid. Thank you!" confirmation with status Paid.
-      On the dashboard, the Pay Flow LLC invoice for $450.00 shows status "Paid",
-      and the "Paid this month" total includes $450.00.
+      The client page showed a green "Paid. Thank you!" confirmation and the status badge changed to "Paid".
+      On the dashboard, the newest (top-most) Pay Flow LLC invoice for $450.00 shows status "Paid",
+      and the "Paid this month" total is at least $450.00.
