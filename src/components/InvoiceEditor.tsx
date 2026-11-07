@@ -166,33 +166,34 @@ export function InvoiceEditor({
             return (
               <div key={idx} className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 sm:grid-cols-[130px_1fr_90px_120px_110px_36px] sm:items-start" data-testid="line-item">
                 <div>
-                  <span className="text-[11px] text-slate-500 sm:hidden">Type</span>
+                  <span className="mb-1 block text-[11px] text-slate-500">Type</span>
                   <select aria-label={`Item ${idx + 1} type`} className="input" value={it.kind} onChange={(e) => changeKind(idx, e.target.value as BillingType)} data-testid="line-kind">
                     {BILLING_TYPES.map((k) => <option key={k} value={k}>{BILLING_TYPE_LABELS[k]}</option>)}
                   </select>
                 </div>
-                <div className="col-span-2 sm:col-span-1">
-                  <span className="text-[11px] text-slate-500">Description</span>
+                <div className={`col-span-2 ${rate ? "sm:col-span-1" : "sm:col-span-2"}`}>
+                  <span className="mb-1 block text-[11px] text-slate-500">Description</span>
                   <input aria-label={`Item ${idx + 1} description`} className="input" value={it.description} onChange={(e) => updateItem(idx, { description: e.target.value })} placeholder={DESCRIPTION_HINT[it.kind]} />
                 </div>
-                <div>
-                  {rate && (
+                {rate && (
+                  <div>
                     <>
-                      <span className="text-[11px] text-slate-500">{QTY_LABEL[it.kind]}</span>
+                      <span className="mb-1 block text-[11px] text-slate-500">{QTY_LABEL[it.kind]}</span>
                       <input aria-label={`Item ${idx + 1} ${QTY_LABEL[it.kind]?.toLowerCase()}`} className={`input${invalid(show(m.quantity))}`} inputMode="decimal" value={it.quantity} onChange={(e) => updateItem(idx, { quantity: e.target.value })} data-testid="line-quantity" />
                       {show(m.quantity) && <p className="mt-1 text-xs font-medium text-red-600">Required</p>}
                     </>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div>
-                  <span className="text-[11px] text-slate-500">{PRICE_LABEL[it.kind]}</span>
+                  <span className="mb-1 block text-[11px] text-slate-500">{PRICE_LABEL[it.kind]}</span>
                   <input aria-label={`Item ${idx + 1} ${PRICE_LABEL[it.kind].toLowerCase()}`} className={`input${invalid(show(m.unit_price))}`} inputMode="decimal" value={it.unit_price} onChange={(e) => updateItem(idx, { unit_price: e.target.value })} data-testid="line-price" />
                   {show(m.unit_price) && <p className="mt-1 text-xs font-medium text-red-600">Required</p>}
                 </div>
-                <div className="self-end text-right sm:self-center sm:pt-4">
-                  <span className="text-sm font-medium tabular-nums">{formatMoney(amount, currency)}</span>
+                <div className="text-right">
+                  <span className="mb-1 block text-[11px] text-slate-500">Total</span>
+                  <span className="flex h-[38px] items-center justify-end text-sm font-medium tabular-nums">{formatMoney(amount, currency)}</span>
                 </div>
-                <button type="button" className="btn-ghost justify-self-end px-2 text-slate-400 hover:text-red-600 sm:pt-5" aria-label={`Remove item ${idx + 1}`} onClick={() => setItems((p) => p.filter((_, i) => i !== idx))} disabled={items.length === 1}>✕</button>
+                <button type="button" className="btn-ghost h-[38px] justify-self-end px-2 text-slate-400 hover:text-red-600 sm:mt-5" aria-label={`Remove item ${idx + 1}`} onClick={() => setItems((p) => p.filter((_, i) => i !== idx))} disabled={items.length === 1}>✕</button>
               </div>
             );
           })}
