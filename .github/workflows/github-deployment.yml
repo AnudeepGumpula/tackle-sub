@@ -1,0 +1,56 @@
+# Seldon QA runs seldon.yml whenever GitHub records a successful Deployment that has an
+# environment_url. Vercel only posts a commit status here, so this workflow turns Vercel's
+# "production deploy finished" status into a GitHub Deployment pointing at the live site.
+# It uses the built-in GITHUB_TOKEN; no secrets are needed.
+name: Publish GitHub Deployment
+
+on:
+  status:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit or branch that is live (default: main)"
+        required: false
+        default: main
+
+permissions:
+  deployments: write
+  contents: read
+
+env:
+  PRODUCTION_URL: https://tackle-sub-2ji7.vercel.app
+  VERCEL_PROJECT: tackle-sub-2ji7
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # Only Vercel's successful production deploy of main for the tackle-sub-2ji7 project
+    # (status context "Vercel – tackle-sub-2ji7"), or a manual run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.state == 'success' &&
+       startsWith(github.event.context, 'Vercel') &&
+       endsWith(github.event.context, 'tackle-sub-2ji7') &&
+       contains(github.event.branches.*.name, 'main'))
+    steps:
+      - name: Create deployment and mark it successful
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF: ${{ github.event_name == 'workflow_dispatch' && inputs.ref || github.event.sha }}
+          LOG_URL: ${{ github.event.target_url || '' }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28")
+
+          deployment_id=$(jq -n --arg ref "$REF" '{
+              ref: $ref, environment: "Production", production_environment: true,
+              auto_merge: false, required_contexts: [], description: "Vercel production deploy"
+            }' | curl -fsS -X POST "${auth[@]}" "$api/deployments" -d @- | jq -r '.id')
+          echo "Created deployment $deployment_id for $REF"
+
+          jq -n --arg url "$PRODUCTION_URL" --arg log "$LOG_URL" '{
+              state: "success", environment_url: $url, description: "Live on Vercel"
+            } + (if $log == "" then {} else {log_url: $log} end)' \
+            | curl -fsS -X POST "${auth[@]}" "$api/deployments/${deployment_id}/statuses" -d @- > /dev/null
+          echo "Marked deployment $deployment_id successful at $PRODUCTION_URL"
