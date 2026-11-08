@@ -7,6 +7,7 @@ import { dashboardStats, getSettings, listInvoices } from "@/lib/store";
 import { DemoControls } from "@/components/DemoControls";
 import { MagicCreate } from "@/components/MagicCreate";
 import { SavingsBanner } from "@/components/SavingsBanner";
+import { WelcomeGuide } from "@/components/WelcomeGuide";
 import { StatusBadge } from "@/components/StatusBadge";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <p className="mt-1 text-slate-500">Describe the work in one sentence. We&apos;ll fill in the rest.</p>
         <div className="mt-5"><MagicCreate aiEnabled={aiEnabled()} /></div>
       </section>
+
+      <WelcomeGuide />
 
       <SavingsBanner savings={savings} tools={TOOLS} currency={cur} />
 
